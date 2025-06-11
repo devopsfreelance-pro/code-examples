@@ -1,0 +1,45 @@
+# docker-compose.yml para un nodo Ethereum con monitoreo
+version: '3'
+
+services:
+  geth:
+    image: ethereum/client-go:stable
+    volumes:
+      - geth-data:/root/.ethereum
+    command: >
+      --http --http.addr=0.0.0.0 --http.port=8545 --http.corsdomain="*" 
+      --http.api=eth,net,web3,txpool,debug 
+      --ws --ws.addr=0.0.0.0 --ws.port=8546 --ws.origins="*"
+      --metrics --metrics.addr=0.0.0.0 --metrics.port=6060
+      --pprof --pprof.addr=0.0.0.0 --pprof.port=6061
+    ports:
+      - "8545:8545"
+      - "8546:8546"
+      - "6060:6060"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - geth
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  geth-data:
+  prometheus-data:
+  grafana-data:

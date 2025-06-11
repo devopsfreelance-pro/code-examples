@@ -1,0 +1,14 @@
+# Configurando un nodo Geth (Ethereum) en Docker
+version: '3'
+services:
+  ethereum-node:
+    image: ethereum/client-go
+    volumes:
+      - /path/to/ethereum:/root
+    ports:
+      - 8545:8545
+      - 30303:30303
+    command: >
+      --http --http.addr "0.0.0.0" --http.port "8545"
+      --http.api "eth,net,web3,personal,txpool"
+      --syncmode "snap"

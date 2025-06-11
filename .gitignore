@@ -1,0 +1,15 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de editores
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos de dependencias
+node_modules/
+vendor/
+.env
+.env.local
