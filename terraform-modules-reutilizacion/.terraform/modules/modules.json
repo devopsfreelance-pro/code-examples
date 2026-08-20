@@ -1,1 +1,0 @@
-{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"network_dev","Source":"./modules/vpc-network","Dir":"modules/vpc-network"},{"Key":"network_prod","Source":"./modules/vpc-network","Dir":"modules/vpc-network"}]}

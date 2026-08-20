@@ -13,3 +13,12 @@ node_modules/
 vendor/
 .env
 .env.local
+
+# Artefactos de validacion/build
+.terraform/
+.terraform.lock.hcl
+lambda.zip
+__pycache__/
+*.pyc
+.tfstate*
+terraform.tfstate*

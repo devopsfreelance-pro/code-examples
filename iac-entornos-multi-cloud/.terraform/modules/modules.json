@@ -1,1 +1,0 @@
-{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"network_aws","Source":"./modules/network/aws","Dir":"modules/network/aws"},{"Key":"network_azure","Source":"./modules/network/azure","Dir":"modules/network/azure"},{"Key":"network_gcp","Source":"./modules/network/gcp","Dir":"modules/network/gcp"}]}
