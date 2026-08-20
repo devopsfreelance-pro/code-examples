@@ -1,0 +1,11 @@
+# Defaults del chart. En el flujo real de la plataforma estos valores
+# los inyecta el renderizador a partir de platform-spec.yaml; estos
+# defaults permiten probar el chart directo con helm.
+name: demo-app
+image: nginx:1.27-alpine
+replicas: 1
+port: 80
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi

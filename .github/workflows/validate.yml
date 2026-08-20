@@ -1,0 +1,56 @@
+name: Validate examples
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: docker compose config
+        run: |
+          fails=0
+          while IFS= read -r f; do
+            docker compose -f "$f" config -q || { echo "FALLA: $f"; fails=$((fails+1)); }
+          done < <(find . -name 'docker-compose.yml' -o -name 'compose.yml')
+          exit $fails
+
+      - name: shellcheck (errores)
+        run: |
+          sudo apt-get install -y -q shellcheck > /dev/null
+          find . -name '*.sh' -print0 | xargs -0 shellcheck -S error
+
+      - name: helm lint
+        run: |
+          fails=0
+          while IFS= read -r c; do
+            helm lint "$(dirname "$c")" || fails=$((fails+1))
+          done < <(find . -name Chart.yaml)
+          exit $fails
+
+      - name: kubeconform (manifests K8s)
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          fails=0
+          while IFS= read -r f; do
+            # solo manifests K8s reales: tienen apiVersion Y kind
+            grep -q '^kind:' "$f" || continue
+            ./kubeconform -ignore-missing-schemas -summary=false "$f" || fails=$((fails+1))
+          done < <(grep -rl '^apiVersion:' --include='*.yaml' --include='*.yml' . | grep -vE 'templates/|Chart.yaml|docker-compose|compose.yml|values.yaml|.github/')
+          exit $fails
+
+      - name: opentofu validate
+        run: |
+          curl -sL https://get.opentofu.org/install-opentofu.sh -o /tmp/install-tofu.sh
+          chmod +x /tmp/install-tofu.sh && /tmp/install-tofu.sh --install-method standalone > /dev/null
+          export TF_PLUGIN_CACHE_DIR=$HOME/.tf-cache && mkdir -p $TF_PLUGIN_CACHE_DIR
+          fails=0
+          while IFS= read -r d; do
+            (cd "$d" && tofu init -backend=false -input=false > /dev/null && tofu validate -no-color) \
+              || { echo "FALLA: $d"; fails=$((fails+1)); }
+          done < <(find . -name '*.tf' -not -path './.github/*' | xargs -r dirname | sort -u)
+          exit $fails

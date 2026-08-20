@@ -45,13 +45,20 @@ resource "aws_iam_role" "lambda_exec" {
   })
 }
 
+# Terraform empaqueta la lambda directamente desde lambda/, sin build previo
+data "archive_file" "lambda" {
+  type        = "zip"
+  source_dir  = "${path.module}/lambda"
+  output_path = "${path.module}/lambda.zip"
+}
+
 resource "aws_lambda_function" "productos" {
   function_name    = "productos-handler"
   role             = aws_iam_role.lambda_exec.arn
   handler          = "handler.handler"
   runtime          = "python3.12"
-  filename         = "${path.module}/lambda.zip"
-  source_code_hash = filebase64sha256("${path.module}/lambda.zip")
+  filename         = data.archive_file.lambda.output_path
+  source_code_hash = data.archive_file.lambda.output_base64sha256
 }
 
 resource "aws_api_gateway_rest_api" "demo" {

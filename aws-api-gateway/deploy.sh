@@ -4,10 +4,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-echo "==> Empaquetando funcion Lambda"
-cd lambda
-zip -q -r ../lambda.zip handler.py
-cd ..
+# El empaquetado de la lambda lo hace Terraform (data "archive_file")
 
 echo "==> Inicializando Terraform"
 terraform init -input=false
