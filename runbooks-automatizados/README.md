@@ -1,3 +1,122 @@
+# Automated Runbooks: minimal engine with pre-checks, steps, and idempotency
+
+Related post: [What Is a Runbook? Practical Guide + Free Templates](https://www.devopsfreelance.pro/blog/en/posts/what-is-a-runbook/)
+
+## What this example demonstrates
+
+The post describes the architecture of an automated runbook (triggers,
+execution engine, automation logic, integrations, logging, and
+notifications) and its recommended structure (metadata, parameters,
+pre-checks, steps, error handling, post-checks). This example
+implements that structure in a minimal but real Python engine:
+
+1. `runbooks/cleanup-old-logs.yaml` defines a declarative runbook (metadata,
+   params, pre_validations, steps, post_validations, notifications), with the
+   same shape as the API latency diagnosis YAML runbook from the post.
+2. `runbook_engine.py` is the "execution engine": it loads the YAML, runs
+   the pre-checks (aborts if they fail), executes the steps in order with
+   explicit error handling, runs the post-checks, and notifies the
+   result.
+3. The example runbook deletes log files older than N days in a
+   test directory, without touching anything on your real system.
+4. It supports `--dry-run` (simulation mode, mentioned in the post as a
+   security best practice) and **idempotency**: running it twice in a row
+   doesn't fail or over-delete the second time.
+5. Every execution gets logged to `runbook.log.jsonl` as structured
+   logging (JSON Lines), just as recommended in the
+   "Monitoring and Maintenance" section of the post.
+
+## Requirements
+
+- Python 3.8+
+- `pyyaml` (`pip install pyyaml`)
+- No cloud accounts, Docker, or external services: everything runs on
+  local files in this directory.
+
+## How to run it
+
+1. Install the only dependency:
+
+```bash
+cd runbooks-automatizados
+pip install pyyaml
+```
+
+2. Generate test data (creates `demo_workspace/logs/` with 3 "old"
+   files with mtime forced to 40 days ago and 2 "new" files):
+
+```bash
+python3 setup_demo_data.py
+```
+
+3. Run the runbook in simulation mode (deletes nothing, just shows what
+   it would do):
+
+```bash
+python3 runbook_engine.py runbooks/cleanup-old-logs.yaml --dry-run
+ls demo_workspace/logs   # all 5 files are still there
+```
+
+4. Run the runbook for real:
+
+```bash
+python3 runbook_engine.py runbooks/cleanup-old-logs.yaml
+ls demo_workspace/logs   # only the 2 "new" files remain
+```
+
+5. Run it again (demonstrates idempotency: there are no old files left to
+   delete, the runbook finishes OK without doing anything):
+
+```bash
+python3 runbook_engine.py runbooks/cleanup-old-logs.yaml
+```
+
+6. View the structured log of every execution:
+
+```bash
+cat runbook.log.jsonl
+```
+
+7. (Optional) Trigger a failed pre-check to see the error handling:
+   edit `runbooks/cleanup-old-logs.yaml` and change `target_dir`
+   to a directory that doesn't exist, then run the runbook again. The
+   engine should abort with `exit code 1` without touching any file.
+
+## Expected output
+
+With `--dry-run`, the console shows something like:
+
+```
+[INFO] start: Iniciando runbook 'cleanup-old-logs' (dry_run=True)
+[OK] check_directory_exists: Directorio .../demo_workspace/logs verificado
+[OK] contar_archivos_viejos: Cuenta cuantos archivos superan max_age_days antes de tocar nada.
+[OK] eliminar_archivos_viejos: Elimina los archivos identificados. Idempotente...
+[OK] verificar_limpieza: Confirma que no queden archivos viejos en el directorio.
+[NOTIFY:console] Limpieza de logs completada
+[OK] end: Runbook finalizado con exito
+```
+
+In the real run, `ls demo_workspace/logs` goes from 5 files to 2
+(`app-hoy.log`, `worker-hoy.log`). If run a third time, the
+`eliminar_archivos_viejos` step finds no old files and the runbook finishes
+with `exit code 0` and no changes, confirming idempotency.
+
+`runbook.log.jsonl` accumulates one JSON line per event (`pre_validation`,
+`step`, `post_validation`), with `status`, `message`, `result`, and `timestamp`,
+ready to parse with `jq` or ship to a centralized logging system.
+
+## Cleanup
+
+To leave the directory as it was when you cloned the repo:
+
+```bash
+rm -rf demo_workspace runbook.log.jsonl __pycache__
+```
+
+---
+
+## 🇪🇸 Versión en español
+
 # Runbooks Automatizados: motor minimo con pre-validaciones, pasos e idempotencia
 
 Post relacionado: [Que es un Runbook: Guia Practica + Plantillas Gratis](https://www.devopsfreelance.pro/blog/posts/runbooks-automatizados/)

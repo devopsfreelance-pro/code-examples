@@ -1,5 +1,107 @@
 # Platform Engineering: mini IDP scaffolder (golden path)
 
+Code example for the blog post: [Platform Engineering: What It Is and How to Build an IDP](https://www.devopsfreelance.pro/blog/en/posts/platform-engineering-guide/)
+
+## What it demonstrates
+
+The post explains that an Internal Developer Platform (IDP) gives developers a "golden path": instead of manually setting up the repo, CI/CD, Kubernetes manifests, monitoring, and catalog registration, they request a new service with a single command and the platform generates everything automatically (the "Example: Template for a New Service" section with the Backstage scaffolder illustrates exactly this).
+
+`scaffold.py` is a minimal version of that same mechanism, without depending on Backstage or a cluster: a Python script that takes the service name (and optionally which database and cache it needs) and generates, from templates, the complete structure described in the post's "Structure of a Generated Service":
+
+```
+my-service/
+├── src/                          # where the app code goes
+├── Dockerfile                    # multi-stage, pre-configured
+├── .github/workflows/ci-cd.yaml  # pipeline: build, test, push, update manifest
+├── k8s/
+│   ├── deployment.yaml           # with resource limits and probes
+│   ├── service.yaml              # ClusterIP
+│   ├── ingress.yaml              # with TLS via cert-manager
+│   └── hpa.yaml                  # autoscaling
+├── monitoring/
+│   └── alerts.yaml               # PrometheusRule (error rate, pods down)
+├── catalog-info.yaml             # catalog registration (Backstage-style)
+└── docs/
+    └── index.md                  # automatic TechDocs
+```
+
+It's the same principle as a Backstage Software Template (repo + CI/CD + infra + monitoring + catalog in minutes), reduced to a script that runs locally so you can see it working without spinning up a full portal.
+
+## Requirements
+
+- Python 3.8 or higher (standard library only, no dependencies to install)
+
+## How to run it
+
+```bash
+cd platform-engineering
+
+# Generate a service with database and cache
+python3 scaffold.py --name orders-api --owner payments-team --database postgresql --cache redis
+
+# Generate a minimal service, without extra infrastructure
+python3 scaffold.py --name notifications-api
+
+# Generate into a different output directory
+python3 scaffold.py --name billing-api --output /tmp/my-services
+```
+
+### Expected output
+
+```
+Generando servicio 'orders-api' (owner=payments-team, database=postgresql, cache=redis)
+
+  creado  orders-api/Dockerfile
+  creado  orders-api/.github/workflows/ci-cd.yaml
+  creado  orders-api/k8s/deployment.yaml
+  creado  orders-api/k8s/service.yaml
+  creado  orders-api/k8s/ingress.yaml
+  creado  orders-api/k8s/hpa.yaml
+  creado  orders-api/monitoring/alerts.yaml
+  creado  orders-api/catalog-info.yaml
+  creado  orders-api/docs/index.md
+  creado  orders-api/src/ (codigo de la app va aca)
+
+Listo. Servicio 'orders-api' generado en: /ruta/completa/orders-api
+Proximos pasos: 'cd', inicializar git, hacer push y dejar que CI/CD tome el resto.
+```
+
+Afterward you can inspect any of the generated files, for example:
+
+```bash
+cat orders-api/k8s/deployment.yaml
+cat orders-api/catalog-info.yaml
+```
+
+### Included validations
+
+The script validates the same things a real Backstage template would validate before creating anything:
+
+```bash
+# Invalid name (doesn't match ^[a-z0-9-]+$) -> error, no files created
+python3 scaffold.py --name Mi_Servicio
+
+# Directory already exists -> error, won't overwrite
+python3 scaffold.py --name orders-api   # if you already ran the example above
+```
+
+## How to extend it
+
+- Add a real `terraform:apply` (like the `create-infra` step of the Backstage template in the post) replacing the placeholder in `.github/workflows/ci-cd.yaml`.
+- Add a new template in `templates/` (for example `dashboard.json.tmpl` for Grafana) and register it in the `mapping` dictionary in `scaffold.py`.
+- Connect it to a real catalog (Backstage, Port, Cortex) by POSTing the generated `catalog-info.yaml` to its API instead of just writing it to disk.
+
+## Notes
+
+- It doesn't include real credentials or accounts: `registry.example.com` and `example.com` are intentional domain placeholders (not secrets), meant to be replaced with your real registry/domain.
+- It doesn't require Docker, Kubernetes, or GitHub Actions to try it out: the generated files are valid (parseable YAML) but aren't executed as part of this example.
+
+---
+
+## 🇪🇸 Versión en español
+
+# Platform Engineering: mini IDP scaffolder (golden path)
+
 Ejemplo de código para el post del blog: [Platform Engineering: Qué Es, Por Qué Importa y Cómo Implementarlo](https://www.devopsfreelance.pro/blog/posts/platform-engineering/)
 
 ## Qué demuestra

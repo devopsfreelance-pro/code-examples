@@ -1,3 +1,91 @@
+# HashiCorp Vault: Secrets Management for DevOps
+
+Runnable example for the post: [HashiCorp Vault: Secrets Management for DevOps Teams](https://www.devopsfreelance.pro/blog/en/posts/hashicorp-vault-guide/)
+
+## What it demonstrates
+
+Spins up a local Vault in dev mode (Docker, no cluster or auto-unseal needed)
+and reproduces the post's central concept, least-privilege access policies
+(section "Access Policies and Granular Security"):
+
+1. Enables the KV v2 secrets engine at the `secret/` path.
+2. Stores an example secret (`secret/myapp/db`, fake database credentials).
+3. Loads the `app-policy.hcl` policy (the same one shown in the post), which
+   only allows `read`/`list` on `secret/data/myapp/*`.
+4. Creates an application token with that policy attached (not the root token).
+5. Verifies live that this token **can** read `secret/myapp/db` but
+   **cannot** read a secret under a different path (`secret/otraapp/db`) — the
+   blast radius stays contained, exactly as the post explains.
+
+It does not include real database dynamic secrets or Kubernetes/AWS
+authentication (they require extra infrastructure); the focus is the policy
+mechanism, which is the central piece and reproducible in minutes.
+
+## Requirements
+
+- Docker and the `docker compose` plugin (Docker Desktop or Docker Engine + compose plugin).
+- No need to install the Vault CLI on your machine: the script runs inside
+  the `vault-demo` container itself, which already includes it.
+
+## Files
+
+- `docker-compose.yml`: brings up Vault 1.17 in dev mode (auto-unseal, fixed
+  root token `root-demo-token`, for this local demo only) and mounts this
+  directory at `/demo` inside the container.
+- `app-policy.hcl`: least-privilege policy, identical to the example in the post.
+- `setup.sh`: script that runs steps 1 through 5 above against the dev Vault.
+
+## Steps to run it
+
+```bash
+# 1. Levantar Vault en modo dev
+docker compose up -d
+
+# 2. Esperar a que el healthcheck esté OK (unos segundos)
+docker compose ps
+
+# 3. Correr la demo dentro del contenedor
+docker compose exec vault sh -c "cd /demo && sh setup.sh"
+
+# 4. (opcional) Explorar la UI de Vault
+#    URL:   http://localhost:8200
+#    Token: root-demo-token
+
+# 5. Apagar todo
+docker compose down -v
+```
+
+## Expected output
+
+The script prints, in order: confirmation that Vault is active, the KV v2
+engine enabled, the stored secret, the loaded policy, the generated
+application token, a successful read of `secret/myapp/db` with the
+application token, and a failed (denied) attempt to read `secret/otraapp/db`
+with that same token. It ends with a summary:
+
+```
+==> Demo completa. Resumen:
+ - Secreto propio (secret/myapp/db): acceso permitido
+ - Secreto ajeno (secret/otraapp/db): acceso denegado
+ - Token root: root-demo-token
+ - Token de app (uso limitado): hvs.xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+The application token (`hvs.xxxx...`) is different on every run; the root
+token is fixed (`root-demo-token`) because that's how `docker-compose.yml`
+defines it, for this local lab only.
+
+## Security note
+
+This setup is exclusively for local learning: Vault runs in dev mode (data
+in memory, lost when the container goes down), with a fixed root token in
+plain text and no TLS. None of this is production-ready; for that, the post
+covers high availability, auto-unseal with KMS, backups, and root token rotation.
+
+---
+
+## 🇪🇸 Versión en español
+
 # HashiCorp Vault: Gestión Segura de Secretos en DevOps
 
 Ejemplo ejecutable del post: [HashiCorp Vault: Gestión Segura de Secretos en DevOps](https://www.devopsfreelance.pro/blog/posts/hashicorp-vault-gestion-secretos/)

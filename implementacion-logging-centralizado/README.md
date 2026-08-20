@@ -1,3 +1,169 @@
+# Centralized Logging with Fluent Bit + Loki + Grafana
+
+Code example for the post: [Centralized Logging: ELK vs Fluentd vs Graylog (2026)](https://www.devopsfreelance.pro/blog/en/posts/centralized-logging-elk-fluentd-graylog/)
+
+## What this demonstrates
+
+The post compares ELK, Fluentd/Fluent Bit, and Graylog for centralizing logs. This
+example implements the three-layer pattern described in the article (collection,
+processing, storage and query) using lightweight components that run on your machine
+with no licenses or cloud accounts required:
+
+- **Two sample apps** (`app-payments`, `app-orders`) that emit **structured JSON
+  logs** to stdout, as recommended in the "Structured logging: the foundation of
+  everything" section of the post.
+- **Fluent Bit** as the collection and processing layer: it receives logs via
+  Docker's `fluentd` logging driver, parses them with a JSON `PARSER`, and forwards
+  them to Loki.
+- **Loki** as the storage and indexing backend (the lightweight alternative to
+  Elasticsearch mentioned in the post's storage layer).
+- **Grafana** as the query and dashboard interface, playing the same role as Kibana
+  or the Graylog UI in the article.
+- `query-logs.sh` reproduces via HTTP API what you'd do in Discover (Kibana) or the
+  Graylog search: view the latest logs, filter by `level=ERROR`, and list the
+  available labels/streams.
+
+It doesn't include the full ELK stack (Elasticsearch + Logstash + Kibana) or Graylog
+because both require several GB of RAM for a local demo; Fluent Bit + Loki
+illustrates the same architectural pattern with a minimal footprint.
+
+## Requirements
+
+- Docker and Docker Compose (the `docker compose` plugin, v2)
+- `curl` and `python3` (already included in most distros; used only to format
+  `query-logs.sh` output)
+- ~600 MB of free RAM and ports `3000`, `3100`, and `24224` available on your
+  machine
+
+No secrets, API keys, or cloud accounts involved.
+
+## Steps to run it
+
+1. Bring up the stack (Loki, Fluent Bit, Grafana, and the two log-generating apps):
+
+   ```bash
+   docker compose up -d
+   ```
+
+2. Wait about 15-20 seconds for Loki and Fluent Bit to finish starting up and for
+   the apps to generate the first log lines:
+
+   ```bash
+   sleep 20
+   ```
+
+3. Query the centralized logs from the terminal:
+
+   ```bash
+   ./query-logs.sh
+   ```
+
+4. (Optional) Explore the logs visually in Grafana:
+
+   ```bash
+   # open in the browser
+   xdg-open http://localhost:3000/explore 2>/dev/null || echo "Open http://localhost:3000/explore"
+   ```
+
+   Grafana already has the Loki datasource provisioned automatically (anonymous
+   login enabled only for this local demo). In **Explore**, pick the `Loki`
+   datasource and run the query:
+
+   ```
+   {job="demo-logs"}
+   ```
+
+5. Shut down and clean everything up:
+
+   ```bash
+   docker compose down -v
+   ```
+
+## Expected output
+
+Running `./query-logs.sh` should show something like this (the actual timestamp,
+latency, and trace_id values will vary):
+
+```
+== Ultimos 20 logs (todos los servicios, job=demo-logs) ==
+{
+    "status": "success",
+    "data": {
+        "resultType": "streams",
+        "result": [
+            {
+                "stream": {
+                    "job": "demo-logs",
+                    "service": "payments-api",
+                    "level": "INFO"
+                },
+                "values": [
+                    [
+                        "1755000000000000000",
+                        "{\"timestamp\":\"2026-08-20T11:42:10-03:00\",\"level\":\"INFO\",\"service\":\"payments-api\",\"trace_id\":\"tr-12345\",\"message\":\"Payment processed successfully\",\"latency_ms\":187}"
+                    ]
+                ]
+            }
+        ]
+    }
+}
+...
+
+== Solo logs con level=ERROR (busqueda filtrada, tipo Discover/Search) ==
+{
+    "status": "success",
+    "data": {
+        "resultType": "streams",
+        "result": [
+            {
+                "stream": {
+                    "job": "demo-logs",
+                    "service": "payments-api",
+                    "level": "ERROR"
+                },
+                "values": [
+                    [
+                        "1755000010000000000",
+                        "{\"timestamp\":\"2026-08-20T11:42:20-03:00\",\"level\":\"ERROR\",\"service\":\"payments-api\",\"trace_id\":\"tr-12350\",\"message\":\"Failed to process payment\",\"latency_ms\":342}"
+                    ]
+                ]
+            }
+        ]
+    }
+}
+
+== Labels detectados (equivalente a los 'streams' de Graylog) ==
+{
+    "status": "success",
+    "data": [
+        "job",
+        "level",
+        "service"
+    ]
+}
+```
+
+`app-payments` emits an `ERROR` every 5 lines ("Failed to process payment") and
+`app-orders` emits a `WARN` every 7 lines ("Order queue backlog detected"); the rest
+are normal `INFO` logs. If the second query (`level=ERROR`) returns `"result": []`,
+wait a few more seconds: the first `ERROR` only shows up after the fifth line
+emitted by `app-payments` (~10 seconds after startup).
+
+## File structure
+
+- `docker-compose.yml` – orchestrates Loki, Fluent Bit, Grafana, and the two demo
+  apps.
+- `fluent-bit.conf` – Fluent Bit pipeline: `forward` input (receives logs from
+  Docker), `parser` filter (JSON), and outputs to `stdout` and to Loki.
+- `parsers.conf` – JSON parser definition used by Fluent Bit.
+- `grafana-datasources.yml` – automatic provisioning of the Loki datasource in
+  Grafana.
+- `query-logs.sh` – example queries against Loki's HTTP API.
+
+---
+
+## 🇪🇸 Versión en español
+
 # Logging centralizado con Fluent Bit + Loki + Grafana
 
 Ejemplo de código para el post: [Centralización de Logs: ELK vs Fluentd vs Graylog (Guía 2026)](https://www.devopsfreelance.pro/blog/posts/implementacion-logging-centralizado/)

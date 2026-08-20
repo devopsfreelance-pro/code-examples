@@ -1,3 +1,126 @@
+# Event-Driven Architecture: Runnable Example with Kafka
+
+Post: [Event-Driven Architecture: The Complete DevOps Guide](https://www.devopsfreelance.pro/blog/en/posts/event-driven-architecture/)
+
+## What This Example Demonstrates
+
+The e-commerce order system described in the post, stripped down to its
+essence: a **producer** publishes an `OrderCreated` event to a Kafka topic,
+and **two independent consumers** (inventory and notifications) each
+process it on their own, without knowing about each other.
+
+Running the example shows live the central point of an event-driven
+architecture: adding the notifications consumer didn't require touching
+either the producer or the inventory consumer. Each one uses its own Kafka
+`group_id`, so both receive a full copy of the event stream and can fail
+or restart independently.
+
+Files:
+
+- `docker-compose.yml`: spins up a single-node Kafka broker in KRaft mode
+  (no Zookeeper), meant only for local testing.
+- `producer.py`: publishes an `OrderCreated` event to the `pedidos` topic.
+- `consumer_inventario.py`: consumes `pedidos` as the `inventario-service`
+  group and simulates reserving stock.
+- `consumer_notificaciones.py`: consumes the same topic as the
+  `notificaciones-service` group and simulates sending a confirmation email.
+
+## Requirements
+
+- Docker and Docker Compose.
+- Python 3.9+ with `pip`.
+- Port `9092` free on your machine.
+
+## Steps to Run It
+
+### 1. Start Kafka
+
+```bash
+docker compose up -d
+```
+
+Wait for the healthcheck to go green (about 10-20 seconds):
+
+```bash
+docker compose ps
+```
+
+### 2. Install Python dependencies
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. Start the two consumers (in two separate terminals)
+
+Terminal A:
+
+```bash
+source venv/bin/activate
+python3 consumer_inventario.py
+```
+
+Terminal B:
+
+```bash
+source venv/bin/activate
+python3 consumer_notificaciones.py
+```
+
+Both will sit waiting for events and print:
+
+```
+[inventario] Escuchando topic 'pedidos' como grupo 'inventario-service'...
+[notificaciones] Escuchando topic 'pedidos' como grupo 'notificaciones-service'...
+```
+
+### 4. Publish an event (in a third terminal)
+
+```bash
+source venv/bin/activate
+python3 producer.py 149.90
+```
+
+Expected producer output:
+
+```
+[productor] Publicando evento: {'tipo': 'PedidoCreado', 'pedido_id': 'a1b2c3d4', 'cliente_id': '678', 'total': 149.9}
+[productor] Evento publicado y confirmado por el broker (acks=all).
+```
+
+And on each consumer, almost instantly:
+
+```
+[inventario] Procesando PedidoCreado para pedido a1b2c3d4: reservando stock por $149.9
+```
+
+```
+[notificaciones] Procesando PedidoCreado para pedido a1b2c3d4: enviando email de confirmación al cliente 678
+```
+
+You can run `producer.py` several times in a row (with or without an amount
+as an argument) and watch both consumers process each event independently
+and in parallel.
+
+### 5. Tear it all down
+
+```bash
+docker compose down -v
+```
+
+## Note
+
+This example uses a single broker with no authentication and no
+persistence configured beyond Kafka's defaults: it's only meant to help
+you understand the producer/consumer/event-bus pattern locally, not for
+production.
+
+---
+
+## 🇪🇸 Versión en español
+
 # Arquitecturas Event-Driven: ejemplo ejecutable con Kafka
 
 Post: [Arquitecturas Event-Driven: Guía Definitiva para DevOps](https://www.devopsfreelance.pro/blog/posts/arquitecturas-event-driven/)

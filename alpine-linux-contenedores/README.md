@@ -1,3 +1,80 @@
+# Alpine Linux for Containers
+
+Post: https://www.devopsfreelance.pro/blog/en/posts/alpine-linux-docker-guide/
+
+## What this example demonstrates
+
+The post explains why Alpine Linux produces container images that are much
+smaller than traditional distributions (Ubuntu, Debian), and shows a
+multi-stage Python Dockerfile as the recommended pattern: a `builder` stage
+with `gcc`/`musl-dev` that compiles the dependencies, and a final stage that
+only copies the already-compiled artifacts, without leaving the compiler in
+the production image.
+
+This example reproduces that exact pattern with a minimal Flask app
+(`app/app.py`, a `/health` endpoint) and compares it, side by side, against
+the same code packaged the "traditional" way:
+
+- `Dockerfile.alpine`: multi-stage build on `python:3.11-alpine`, matching
+  the Dockerfile from the post (a `builder` stage with
+  `gcc`/`musl-dev`/`python3-dev`, and a final stage with only the runtime
+  and a non-root user created with `addgroup`/`adduser`).
+- `Dockerfile.debian`: single-stage build on `python:3.11-slim`, leaving
+  `gcc` installed in the final image, exactly what the post warns tends to
+  happen when multi-stage isn't used.
+- `scripts/compare_sizes.sh`: builds both images, prints the size
+  difference with `docker images`, and runs a smoke test against `/health`
+  on the Alpine image.
+
+## Requirements
+
+- Docker
+- `curl` (used by the script for the smoke test)
+
+## How to run it
+
+```bash
+cd alpine-linux-contenedores
+./scripts/compare_sizes.sh
+```
+
+The script does, in order:
+
+1. `docker build -f Dockerfile.alpine -t alpine-demo:alpine .`
+2. `docker build -f Dockerfile.debian -t alpine-demo:debian .`
+3. Prints a table comparing `alpine-demo:alpine` vs `alpine-demo:debian`
+4. Starts `alpine-demo:alpine` on port 5000 and tests `/health`
+
+## Expected output
+
+A size table where the Alpine image is several times smaller than the
+Debian slim one (exact values vary depending on the base image versions,
+but the ratio holds, consistent with what the post describes). Actual
+output from a test run:
+
+```
+TAG       SIZE
+debian    315MB
+alpine    59.5MB
+```
+
+And the final smoke test:
+
+```
+Respuesta de /health:
+{"status":"ok"}
+```
+
+## Cleanup
+
+```bash
+docker rmi alpine-demo:alpine alpine-demo:debian
+```
+
+---
+
+## 🇪🇸 Versión en español
+
 # Alpine Linux para contenedores
 
 Post: https://www.devopsfreelance.pro/blog/posts/alpine-linux-contenedores/

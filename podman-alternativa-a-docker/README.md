@@ -1,8 +1,131 @@
-# Podman: contenedor rootless + generacion de manifiesto Kubernetes
+# Podman: rootless containers + Kubernetes manifest generation
+
+Code example accompanying the post [Podman vs Docker: A Secure, Daemonless Alternative](https://www.devopsfreelance.pro/blog/en/posts/podman-vs-docker-alternative/).
+
+## What it demonstrates
+
+The post explains that the core difference between Podman and Docker isn't
+about commands (they're nearly identical) but about architecture: Podman has
+no root daemon (`dockerd`), and each container runs as a direct child process
+of the user, isolated via *user namespaces* and *subordinate UIDs*
+(rootless containers).
+
+This example puts that on display with a minimal app:
+
+1. Builds an image with a `Containerfile` (compatible with `docker build`
+   and `podman build`, no modifications needed).
+2. Runs the container in **rootless** mode with `podman run`.
+3. Verifies, from the host, that the container's process runs with an
+   unprivileged UID (subordinate UID mapping), not with real host root.
+4. Generates a Kubernetes manifest directly from the running container
+   with `podman generate kube`, the capability the post highlights as
+   Podman's advantage for moving from local development to Kubernetes
+   without rewriting anything by hand.
+5. Includes a `compose.yml` to spin up the same service alongside Redis
+   with `podman-compose`, showing that in Podman the network between
+   containers has to be declared explicitly (unlike Docker's automatic
+   bridge network).
+
+## Requirements
+
+- Linux (rootless containers use Linux kernel user namespaces; on
+  macOS/Windows Podman works but runs inside a VM, and step 3 of the
+  demo doesn't apply the same way).
+- [Podman](https://podman.io/docs/installation) installed:
+
+  ```bash
+  # Fedora / RHEL / CentOS Stream
+  sudo dnf install podman
+
+  # Ubuntu / Debian
+  sudo apt-get update
+  sudo apt-get install podman
+  ```
+
+- `curl` (to test the endpoint; optional, the script still works without it).
+- Optional, for the Compose step: `podman-compose`
+
+  ```bash
+  # Via pip (any distro with Python 3)
+  pip3 install --user podman-compose
+  ```
+
+Docker is not required; everything runs with Podman.
+
+## Steps to run it
+
+### 1. Build + rootless run + generate kube (main script)
+
+```bash
+cd podman-alternativa-a-docker
+chmod +x demo.sh
+./demo.sh
+```
+
+Expected output (summarized):
+
+```
+==> 1) Construyendo la imagen con Podman (equivalente a docker build)
+...
+==> 2) Corriendo el contenedor en modo rootless
+<container id>
+
+==> 3) UID del proceso visto desde el HOST (fuera del contenedor)
+    Deberia ser un UID sin privilegios (no 0), aunque adentro el proceso se vea como root/UID configurado.
+HUSER    PID    COMMAND
+1000     12345  python
+
+==> 4) Probando el servicio
+Hola desde un contenedor rootless con Podman
+hostname: <hash>
+PID dentro del contenedor: 1
+UID dentro del contenedor: 1000
+GID dentro del contenedor: 1000
+
+==> 5) Generando manifiesto de Kubernetes desde el contenedor en ejecucion
+    Manifiesto guardado en podman-kube.yaml
+
+==> 6) Limpieza
+    Contenedor detenido y eliminado. La imagen 'podman-demo:latest' y el archivo podman-kube.yaml quedan disponibles.
+```
+
+The key field is `HUSER` in step 3: it shows the real UID on the host
+(for example `1000`, your own user), never `0`/root, even though the process
+inside the container runs as the `appuser` user (UID 1000 inside the
+container's namespace). Check `podman-kube.yaml` to see the automatically
+generated Kubernetes manifest.
+
+### 2. (Optional) Run with podman-compose
+
+```bash
+podman-compose -f compose.yml up -d
+curl -s http://localhost:8080/
+podman-compose -f compose.yml down
+```
+
+Expected `curl` output: the same greeting text from the previous step. This
+demonstrates that `compose.yml` is interchangeable between Docker Compose and
+podman-compose, except for the `appnet` network, which is declared explicitly
+here (with Podman there's no automatic bridge network between services).
+
+## Files
+
+- `Containerfile` — minimal Python image, runs as an unprivileged user
+  inside the container.
+- `app/app.py` — HTTP server that reports PID/UID to verify rootless
+  isolation.
+- `compose.yml` — multi-service definition (web + redis) with explicit
+  network for `podman-compose`.
+- `demo.sh` — script that automates build, rootless run, UID verification,
+  and `podman generate kube`.
+
+---
+
+## 🇪🇸 Versión en español
 
 Ejemplo de codigo que acompaña al post [Podman: Alternativa Segura y Moderna a Docker en 2025](https://www.devopsfreelance.pro/blog/posts/podman-alternativa-a-docker/).
 
-## Que demuestra
+### Que demuestra
 
 El post explica que la diferencia central entre Podman y Docker no es de
 comandos (son casi identicos) sino de arquitectura: Podman no tiene un
@@ -26,7 +149,7 @@ Este ejemplo pone eso en evidencia con una app minima:
    hay que declararla explicitamente (a diferencia de la red bridge
    automatica de Docker).
 
-## Requisitos
+### Requisitos
 
 - Linux (rootless containers usa user namespaces del kernel Linux; en
   macOS/Windows Podman funciona pero corre dentro de una VM y el paso 3
@@ -52,9 +175,9 @@ Este ejemplo pone eso en evidencia con una app minima:
 
 No hace falta Docker instalado; todo corre con Podman.
 
-## Pasos para correrlo
+### Pasos para correrlo
 
-### 1. Build + run rootless + generate kube (script principal)
+#### 1. Build + run rootless + generate kube (script principal)
 
 ```bash
 cd podman-alternativa-a-docker
@@ -95,7 +218,7 @@ dentro del contenedor corre como el usuario `appuser` (UID 1000 dentro del
 namespace del contenedor). Revisa `podman-kube.yaml` para ver el manifiesto
 de Kubernetes generado automaticamente.
 
-### 2. (Opcional) Levantar con podman-compose
+#### 2. (Opcional) Levantar con podman-compose
 
 ```bash
 podman-compose -f compose.yml up -d
@@ -108,7 +231,7 @@ demuestra que `compose.yml` es intercambiable entre Docker Compose y
 podman-compose, salvo por la red `appnet`, que aqui se declara de forma
 explicita (con Podman no hay red bridge automatica entre servicios).
 
-## Archivos
+### Archivos
 
 - `Containerfile` — imagen minima en Python, corre como usuario sin
   privilegios dentro del contenedor.

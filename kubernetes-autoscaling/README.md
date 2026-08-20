@@ -1,5 +1,97 @@
 # Kubernetes Autoscaling (HPA)
 
+Runnable example from the post [Kubernetes HPA: Complete Guide to Dynamic Autoscaling](https://www.devopsfreelance.pro/blog/en/posts/kubernetes-hpa-guide/).
+
+## What it demonstrates
+
+The core concept of the post: the **Horizontal Pod Autoscaler (HPA)** automatically adjusting the number of replicas of a Deployment based on real CPU usage, with no manual intervention.
+
+The example spins up a local Kubernetes cluster with `kind` and deploys:
+
+- **php-apache**: the classic reference app for HPA demos (`registry.k8s.io/hpa-example`), a PHP server that burns CPU calculating square roots on every request. It's deployed with 1 initial replica and `requests.cpu: 200m` (`deployment.yaml`).
+- **metrics-server**: collects pod CPU/memory usage and exposes it through the metrics API, which is what HPA queries every 15 seconds (as explained in the post). On `kind` it needs to be patched to accept the kubelet's self-signed TLS.
+- **php-apache-hpa**: an HPA v2 (`hpa.yaml`) with the same shape as the examples in the post: `minReplicas: 1`, `maxReplicas: 6`, a 50% CPU target, and a `behavior` block that scales up fast (doubles every 15s) and scales down conservatively (with `stabilizationWindowSeconds: 60` to avoid flapping).
+- **load-generator**: a `busybox` pod (`load-generator.yaml`) that hits the `php-apache` Service in an infinite loop to generate the CPU load that triggers scaling.
+
+It's the same cycle described in the article: metrics-server measures CPU -> HPA calculates the desired replicas every 15s -> the Deployment scales -> the `behavior` policies control the speed of scale-up/scale-down.
+
+## Requirements
+
+- [kind](https://kind.sigs.k8s.io/) (Kubernetes in Docker)
+- `kubectl`
+- Docker running locally
+
+No cloud accounts or paid services required: everything runs on a local kind cluster.
+
+## Steps to run it
+
+1. Enter the directory and make the script executable:
+
+```bash
+cd kubernetes-autoscaling
+chmod +x setup.sh
+```
+
+2. Run the setup (creates the kind cluster, installs metrics-server, deploys the app, applies the HPA, and launches the load generator):
+
+```bash
+./setup.sh
+```
+
+The script takes about 2-3 minutes, mostly waiting for `metrics-server` to start reporting real metrics.
+
+3. Watch the HPA scaling live:
+
+```bash
+kubectl get hpa php-apache-hpa --watch
+```
+
+4. When you're done watching it scale up, cut the load to see the scale-down (it takes ~1 minute because of `stabilizationWindowSeconds: 60`):
+
+```bash
+kubectl delete pod load-generator
+```
+
+5. Tear down the demo cluster:
+
+```bash
+kind delete cluster --name hpa-demo
+```
+
+## Expected output
+
+Right after applying the HPA, with a freshly created cluster and no load:
+
+```
+NAME             REFERENCE               TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+php-apache-hpa   Deployment/php-apache   0%/50%    1         6         1          10s
+```
+
+With `load-generator` running, within 1-2 minutes CPU usage exceeds the 50% target and HPA starts creating replicas:
+
+```
+NAME             REFERENCE               TARGETS     MINPODS   MAXPODS   REPLICAS   AGE
+php-apache-hpa   Deployment/php-apache   287%/50%    1         6         1          70s
+php-apache-hpa   Deployment/php-apache   287%/50%    1         6         2          85s
+php-apache-hpa   Deployment/php-apache   180%/50%    1         6         4          100s
+php-apache-hpa   Deployment/php-apache   62%/50%     1         6         6          130s
+```
+
+After deleting `load-generator`, TARGETS drops back down, and after the 60s stabilization window HPA gradually reduces REPLICAS (per the `scaleDown` policy in `hpa.yaml`) until it's back to 1.
+
+## Files
+
+- `deployment.yaml` - Deployment + Service for the `php-apache` app.
+- `hpa.yaml` - HorizontalPodAutoscaler v2 with a CPU target and scale up/down `behavior` policies.
+- `load-generator.yaml` - `busybox` pod that generates continuous traffic to force scaling.
+- `setup.sh` - Orchestrates everything: creates the cluster, installs and patches metrics-server, deploys the app, and applies the HPA.
+
+---
+
+## 🇪🇸 Versión en español
+
+# Kubernetes Autoscaling (HPA)
+
 Ejemplo ejecutable del post [Guía Completa de Kubernetes autoscaling](https://www.devopsfreelance.pro/blog/posts/kubernetes-autoscaling/).
 
 ## Que demuestra

@@ -1,3 +1,104 @@
+# Kyverno: native Kubernetes policies
+
+Related post: [Kyverno Kubernetes Policies: The Complete Guide 2026](https://www.devopsfreelance.pro/blog/en/posts/kyverno-kubernetes-policies/)
+
+## What this example demonstrates
+
+The post presents the article's core validation policy (section
+"Building Practical Policies"): a `ClusterPolicy` that requires every
+Pod to define `resources.limits` for CPU and memory, rejecting at the
+admission webhook any Pod that doesn't comply.
+
+This example reproduces that flow end to end on a real, local Kubernetes
+cluster (kind), without depending on any cloud provider:
+
+1. `require-resource-limits.yaml` is the `ClusterPolicy` from the post
+   (same rule, same `pattern`). The only change is
+   `validationFailureAction` from `enforce` to `Enforce`: the post uses
+   the old lowercase syntax, but current Kyverno versions (1.11+)
+   require the capitalized value `Enforce`/`Audit`; lowercase makes the
+   chart fail when installing the policy.
+2. `pod-conforme.yaml` is a Pod with `limits` for CPU and memory
+   defined: Kyverno should accept it.
+3. `pod-no-conforme.yaml` is the same Pod without a `resources` block:
+   Kyverno should reject it at `kubectl apply` time, with the message
+   defined in the policy.
+4. `run.sh` automates the whole thing: creates the kind cluster,
+   installs Kyverno with Helm (the same commands from the post), applies
+   the policy, and tests both Pods, verifying the result is as expected
+   (one accepted, one rejected).
+
+## Requirements
+
+- Docker (or Podman) running, so kind can spin up the nodes
+- [kind](https://kind.sigs.k8s.io/) (`go install sigs.k8s.io/kind@latest` or a release binary)
+- `kubectl`
+- `helm` v3
+
+No cloud provider account is needed: everything runs locally.
+
+## How to run it
+
+```bash
+cd kyverno-politicas-kubernetes
+./run.sh
+```
+
+The script does, in order:
+
+1. Creates (or reuses) a kind cluster named `kyverno-demo`.
+2. Installs Kyverno in the `kyverno` namespace via Helm and waits for the
+   pods to be `Ready`.
+3. Applies `require-resource-limits.yaml` and waits for the policy to be
+   ready (`status.ready == true`).
+4. Creates the `demo-kyverno` namespace.
+5. Applies `pod-conforme.yaml` (should be created without issues).
+6. Applies `pod-no-conforme.yaml` (should be rejected by Kyverno's
+   webhook).
+
+## Expected output
+
+```
+== 6/6: probando los dos Pods ==
+
+--- Pod CONFORME (tiene resources.limits): se espera que se cree ---
+pod/pod-conforme created
+OK: el pod conforme fue aceptado, como se esperaba.
+
+--- Pod NO CONFORME (sin resources.limits): se espera que Kyverno lo rechace ---
+OK: el admission webhook de Kyverno rechazo el Pod, como se esperaba:
+  admission webhook "validate.kyverno.svc-fail" denied the request:
+
+  resource Pod/demo-kyverno/pod-no-conforme was blocked due to the following policies
+
+  require-resource-limits:
+    check-container-resources: 'validation error: Todos los contenedores deben
+      tener limites de CPU y memoria definidos. rule check-container-resources
+      failed at path /spec/containers/0/resources/'
+
+== Demo completada. Para limpiar: kind delete cluster --name kyverno-demo ==
+```
+
+(Note: the console output above comes directly from `run.sh`, which prints its own messages in Spanish; it is left unmodified since it is actual command output, not prose.)
+
+## Manual verification (optional)
+
+```bash
+kubectl get clusterpolicy require-resource-limits
+kubectl get pods -n demo-kyverno
+kubectl describe clusterpolicy require-resource-limits   # ver status y estadisticas de la regla
+```
+
+## Cleanup
+
+```bash
+kind delete cluster --name kyverno-demo
+```
+
+---
+
+## 🇪🇸 Versión en español
+
 # Kyverno: políticas nativas de Kubernetes
 
 Post relacionado: [Guía Completa de Kyverno para políticas en Kubernetes](https://www.devopsfreelance.pro/blog/posts/kyverno-politicas-kubernetes/)

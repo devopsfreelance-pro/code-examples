@@ -1,3 +1,109 @@
+# Cgroups and namespaces in practice
+
+Runnable example for the post [Advanced Linux System Administration: Master Enterprise Linux](https://www.devopsfreelance.pro/blog/en/posts/advanced-linux-system-administration/).
+
+## What it demonstrates
+
+The post explains cgroups and namespaces by creating cgroups by hand with `mkdir` in
+`/sys/fs/cgroup/`. This example shows that Docker is nothing more than an
+automation layer on top of those same kernel mechanisms, and proves it in
+practice:
+
+1. Builds an image with `stress-ng` that tries to reserve 150 MB of RAM.
+2. Runs it in a container with a memory limit of 100 MB
+   (`--memory=100m`), i.e. a real cgroup created by Docker.
+3. Confirms in the log that the kernel kills the process repeatedly for
+   exceeding the limit (OOM-kill), demonstrating that the cgroup limit is
+   actually enforced and not just a cosmetic Docker parameter.
+4. Shows how to manually inspect, from the host, the real cgroup v2
+   file that Docker created for a live container (`memory.max`,
+   `memory.current`), the exact equivalent of `memory.limit_in_bytes`
+   mentioned in the post but with cgroups v2 syntax.
+5. Lists the kernel namespaces (PID, network, mount, IPC, UTS, user, cgroup,
+   time) as a reference for the same namespaces that isolate a
+   container.
+
+## Requirements
+
+- Docker (tested with Docker 29.x). No root is needed on the host beyond
+  the usual permissions to use `docker`.
+- A kernel with **cgroup v2** enabled (default on Ubuntu 22.04+,
+  Debian 12+, recent Fedora, etc). You can verify it with:
+  ```bash
+  stat -fc %T /sys/fs/cgroup/
+  # should print: cgroup2fs
+  ```
+
+## How to run it
+
+```bash
+cd administracion-avanzada-de-sistemas-linux--domina-linux-avanzado
+./demo-cgroups-namespaces.sh
+```
+
+The script:
+- Builds the `linux-avanzado-cgroups-demo` image from the `Dockerfile`.
+- Runs the test container (takes ~20 seconds) and shows the log
+  live.
+- Counts how many times the kernel killed the process due to OOM.
+- Lists the namespaces of the current host process, as a reference.
+- Prints instructions to manually inspect the real cgroup of a
+  live container.
+
+For step 4 (manual inspection of a live cgroup), you can try it
+yourself in parallel:
+
+```bash
+CID=$(docker run -d --memory=100m alpine sleep 60)
+cat /sys/fs/cgroup/system.slice/docker-${CID}.scope/memory.max
+cat /sys/fs/cgroup/system.slice/docker-${CID}.scope/memory.current
+docker stop ${CID}
+```
+
+## Expected output
+
+In the container section you will see lines like these repeated several
+times (the exact number varies by machine):
+
+```
+stress-ng: debug: [7] vm: assuming killed by OOM killer, restarting again (instance 0)
+stress-ng: debug: [7] vm: child died: signal 9 'SIGKILL' (instance 0)
+```
+
+And at the end:
+
+```
+El kernel mató el proceso 302 vez/veces por exceder el límite
+de memoria del cgroup (100M), aunque pedía 150M. stress-ng reintenta
+el stressor tras cada muerte, por eso el contenedor sigue corriendo
+hasta el timeout en vez de terminar con código 137 de una sola vez.
+Esto confirma que el límite del cgroup es real y lo aplica el kernel.
+```
+
+For the manual example `docker run -d --memory=100m alpine sleep 60`, the
+output of `memory.max` and `memory.current` are values in bytes, for example:
+
+```
+104857600
+892928
+```
+
+(104857600 bytes = 100 MB, the configured limit; the second value is the
+memory actually in use by the container at that moment).
+
+## Notes
+
+- Does not require accounts or credentials from any cloud provider.
+- Everything runs locally with Docker, no paid dependencies.
+- The exact cgroup path (`/sys/fs/cgroup/system.slice/docker-<id>.scope/`)
+  may vary slightly depending on the distro/Docker version if it uses a
+  cgroup driver other than `systemd` (e.g. `cgroupfs`); in that case
+  look for the container ID under `/sys/fs/cgroup/docker/<id>/`.
+
+---
+
+## 🇪🇸 Versión en español
+
 # Cgroups y namespaces en la práctica
 
 Ejemplo ejecutable para el post [Administración Avanzada de Sistemas Linux: Domina Linux Avanzado](https://www.devopsfreelance.pro/blog/posts/administracion-avanzada-de-sistemas-linux--domina-linux-avanzado/).

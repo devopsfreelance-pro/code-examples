@@ -1,3 +1,94 @@
+# Compliance as Code: preventive blocking of insecure manifests with OPA
+
+Related post: [Compliance as Code: Automating Security in DevOps](https://www.devopsfreelance.pro/blog/en/posts/compliance-as-code-guide/)
+
+## What this example demonstrates
+
+The post explains that compliance as code turns security requirements into
+executable code that automatically verifies every change before it reaches
+production (section "Policy as Code: The Heart of the System"), using as an
+example an Open Policy Agent (OPA) policy that requires Kubernetes containers
+to run as a non-root user and without privileged mode.
+
+This example reproduces that policy 100% locally, without needing a
+Kubernetes cluster or a real admission controller:
+
+1. `policies/kubernetes-security.rego` contains the two `deny` rules from
+   the post (mandatory non-root, no privileged mode), adapted to receive the
+   raw YAML manifest instead of an `AdmissionReview` payload.
+2. `manifests/pod-compliant.yaml` and `manifests/pod-noncompliant.yaml` are
+   two example Pods: one complies with the policy, the other runs as root
+   and in privileged mode.
+3. `validate.sh` runs `conftest` (the engine that executes Rego policies
+   against configuration files) against both manifests, just like a CI/CD
+   step that blocks a merge or a deploy. The script exits with `exit 1` if
+   the insecure manifest is not rejected, and `exit 0` if the policy works
+   as expected.
+
+This illustrates the post's central principle: "shift left" for compliance,
+catching policy violations in the pipeline instead of manually auditing
+infrastructure after the fact.
+
+## Requirements
+
+One of two options:
+
+- **Option A (recommended, nothing to install):** Docker. The script
+  automatically uses the `openpolicyagent/conftest` image if it doesn't find
+  the `conftest` binary installed.
+- **Option B:** [conftest](https://www.conftest.dev/install/) installed
+  locally (`brew install conftest`, or a binary from GitHub releases).
+
+No Kubernetes, kind, minikube, or cloud account is needed.
+
+## How to run it
+
+```bash
+cd compliance-as-code
+./validate.sh
+```
+
+## Expected output
+
+```
+== Compliance as code: validando manifiestos de Kubernetes contra policies/kubernetes-security.rego ==
+
+--- Caso 1: pod compliant (se espera PASS) ---
+
+2 tests, 2 passed, 0 warnings, 0 failures, 0 exceptions
+
+--- Caso 2: pod NO compliant (se espera FAIL) ---
+FAIL - manifests/pod-noncompliant.yaml - main - El contenedor 'debug' debe ejecutarse como usuario no-root (securityContext.runAsNonRoot: true)
+FAIL - manifests/pod-noncompliant.yaml - main - El contenedor 'debug' no puede ejecutarse en modo privilegiado (securityContext.privileged: true)
+
+2 tests, 0 passed, 0 warnings, 2 failures, 0 exceptions
+
+== Resultado: la política bloqueó correctamente el manifiesto inseguro (exit code 1) ==
+```
+
+The `pod-compliant.yaml` Pod (non-root image, no privileges) passes both
+rules. The `pod-noncompliant.yaml` Pod (no `runAsNonRoot`, with
+`privileged: true`) triggers both violations, just like a real admission
+controller would do when blocking `kubectl apply` on a production cluster.
+
+## Going further
+
+To test the policy against your own manifests:
+
+```bash
+conftest test tu-manifiesto.yaml --policy policies
+```
+
+To simulate real usage as an admission controller, tools like
+[Gatekeeper](https://open-policy-agent.github.io/gatekeeper/) or
+[Kyverno](https://kyverno.io/) load equivalent policies directly into the
+cluster and reject `kubectl apply` calls that violate them, instead of
+validating them as a separate CI/CD step.
+
+---
+
+## 🇪🇸 Versión en español
+
 # Compliance as Code: bloqueo preventivo de manifiestos inseguros con OPA
 
 Post relacionado: [Guía Completa de Compliance as Code](https://www.devopsfreelance.pro/blog/posts/compliance-as-code/)

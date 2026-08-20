@@ -1,3 +1,120 @@
+# Linux resource management with cgroups: runnable demo
+
+Post: [Linux Resource Management with cgroups and systemd](https://www.devopsfreelance.pro/blog/en/posts/linux-resource-management-cgroups-systemd/)
+
+## What this example demonstrates
+
+The post explains that **cgroups** is the kernel mechanism that limits CPU and
+memory per process group, and that **systemd** (with `CPUQuota=`,
+`MemoryMax=`) and **Docker** (with `--cpus`, `--memory`) are two different
+ways of configuring that same mechanism.
+
+This example spins up two containers with `stress-ng` that try to consume
+more CPU and more memory than they're allowed, and shows live how cgroups
+enforces the limit:
+
+- **`cpu-limitado`**: requests 2 cores at 100% but the cgroup only grants it
+  0.5 CPU (`cpus: "0.5"` in Compose, equivalent to `CPUQuota=50%` in a
+  systemd unit).
+- **`mem-limitado`**: tries to reserve 300MB but the cgroup only allows it
+  100MB (`mem_limit: 100m` in Compose, equivalent to `MemoryMax=100M`). The
+  kernel kills the process via OOM inside the cgroup before it can affect the
+  rest of the system.
+
+It also includes `systemd-run-demo.sh`, an optional script to see the same
+limit applied directly with `systemd-run` on a Linux machine with systemd
+(without going through Docker), which is exactly the production use case the
+post describes.
+
+## Requirements
+
+- Docker with Docker Compose v2 (`docker compose version`)
+- Native Linux (on macOS/Windows with Docker Desktop, `mem-limitado` may not
+  kill the process because the internal VM manages memory differently)
+- Optional, for `systemd-run-demo.sh`: Linux with systemd as PID 1 and
+  `stress-ng` installed (`sudo apt install stress-ng` or
+  `sudo dnf install stress-ng`)
+
+## How to run it
+
+```bash
+cd gestion-recursos-sistemas-linux
+chmod +x run-demo.sh
+./run-demo.sh
+```
+
+The script does, in order:
+
+1. Builds the image (`alpine` + `stress-ng`).
+2. Runs `cpu-limitado`: requests 2 cores, the cgroup gives it 0.5.
+3. Runs `mem-limitado`: requests 300MB, the cgroup gives it 100MB and kills it.
+4. Cleans up the containers.
+
+You can also run each service separately:
+
+```bash
+docker compose build
+docker compose run --rm cpu-limitado
+docker compose run --rm mem-limitado
+```
+
+And, if you're on Linux with systemd and want to see the same limit without
+Docker:
+
+```bash
+chmod +x systemd-run-demo.sh
+./systemd-run-demo.sh
+```
+
+## Expected output
+
+In `cpu-limitado`, `stress-ng --metrics-brief` reports the actual time used
+by the workers. With the 0.5 CPU limit, the "bogo ops/s" and the real CPU
+usage stay capped at ~50% of one core, even though 2 cores at 100% were
+requested:
+
+```
+demo-cpu-limitado  |  stress-ng: info:  [1] setting to a 20 second run per stressor
+demo-cpu-limitado  |  stress-ng: info:  [1] dispatching hogs: 2 cpu
+demo-cpu-limitado  |  stress-ng: info:  [1] cpu:            ... (bogo ops/s bajo por el throttling)
+demo-cpu-limitado  |  stress-ng: info:  [1] successful run completed in 20.00s
+```
+
+In `mem-limitado`, the container exits with a nonzero exit code (`Killed`,
+exit code 137) because the kernel triggered the cgroup's OOM killer once it
+exceeded the 100MB limit:
+
+```
+demo-mem-limitado  |  stress-ng: info:  [1] dispatching hogs: 1 vm
+demo-mem-limitado  |  stress-ng: info:  [1] vm: stress-ng-vm: got SIGKILL...
+   -> El proceso murio (exit code 137), como se espera:
+      cgroups impidio que superara los 100MB asignados.
+```
+
+You can confirm the exact reason for the kill with:
+
+```bash
+docker inspect demo-mem-limitado --format '{{.State.OOMKilled}}'
+```
+
+## Relation to the post
+
+This reproduces in miniature what the post describes with:
+
+```ini
+[Service]
+CPUQuota=50%
+MemoryLimit=1G
+```
+
+Docker Compose (`cpus:`, `mem_limit:`) and systemd (`CPUQuota=`,
+`MemoryMax=`) configure the same underlying cgroups controller; the only
+difference is the declarative layer you use to write the limit.
+
+---
+
+## 🇪🇸 Versión en español
+
 # Gestión de recursos en Linux con cgroups: demo ejecutable
 
 Post: [Gestión de Recursos en Linux: CPU, Memoria y Disco con cgroups y systemd](https://www.devopsfreelance.pro/blog/posts/gestion-recursos-sistemas-linux/)

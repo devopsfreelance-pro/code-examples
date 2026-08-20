@@ -1,3 +1,85 @@
+# Linux Kernel Tuning with sysctl - Runnable Example
+
+Post: [Linux Kernel Tuning: Optimize Performance with sysctl](https://www.devopsfreelance.pro/blog/en/posts/linux-kernel-tuning/)
+
+## What this demonstrates
+
+The post covers dozens of `sysctl` parameters (network, memory, filesystem, etc.)
+but applying them to a real kernel requires `sudo` and modifies an entire
+machine, which is not something that can be requested safely in a blog example.
+
+This example uses a safe, 100% reproducible alternative: the `net.*`
+parameters that are "namespaced" (one per Linux network namespace) can be
+applied per-container with Docker, without `--privileged` and without
+touching the host kernel. It spins up two identical nginx containers, one
+without tuning and one with a real subset of the parameters from the post
+(`net.core.somaxconn`, `net.ipv4.tcp_fin_timeout`, `net.ipv4.tcp_syncookies`,
+`net.ipv4.ip_local_port_range`), plus a script that reads the effective
+values of each one with `sysctl -n` inside each container to compare
+"before" and "after" in practice.
+
+## Requirements
+
+- Docker with Compose v2 support (`docker compose version`)
+- No `sudo` required on the host, no privileged permissions
+
+## Files
+
+- `docker-compose.yml` - two nginx services: `nginx-default` (no tuning) and
+  `nginx-tuned` (with the `sysctls:` key applying the parameters from the post)
+- `sysctl.d/99-tuning-demo.conf` - the same parameters in the real
+  configuration file format used by `/etc/sysctl.d/`, as a reference for how
+  they'd be applied on a real server (`sudo sysctl --system`)
+- `compare-sysctl.sh` - compares the effective sysctl values between both
+  containers
+
+## Steps to run it
+
+```bash
+# 1. Levantar los dos contenedores
+docker compose up -d
+
+# 2. Comparar los parametros de sysctl entre el contenedor sin tuning
+#    y el contenedor tuneado
+./compare-sysctl.sh
+
+# 3. Limpiar
+docker compose down
+```
+
+## Expected output
+
+```
+Parametro                        | nginx-default        | nginx-tuned
+-------------------------------------------------------------------
+net.core.somaxconn               | 4096                 | 65535
+net.ipv4.tcp_fin_timeout         | 60                   | 15
+net.ipv4.tcp_syncookies          | 1                    | 1
+net.ipv4.ip_local_port_range     | 32768	60999          | 1024	65535
+```
+
+The exact values in the `nginx-default` column may vary depending on the
+host's distribution and Docker/kernel version (for example, `somaxconn`
+may come in as 128 or 4096), but the `nginx-tuned` column will always
+reflect exactly the values defined in `docker-compose.yml`.
+
+## Taking it to a real server
+
+On a server (not a container), the same parameters are applied by copying
+`sysctl.d/99-tuning-demo.conf` to `/etc/sysctl.d/` and running:
+
+```bash
+sudo cp sysctl.d/99-tuning-demo.conf /etc/sysctl.d/
+sudo sysctl --system
+```
+
+See the full post for the rest of the parameters (memory, filesystem,
+Kubernetes) and the recommended methodology for applying them in production.
+
+---
+
+## 🇪🇸 Versión en español
+
 # Tuning del Kernel Linux con sysctl - Ejemplo ejecutable
 
 Post: [Tuning del Kernel Linux: Optimiza Rendimiento con sysctl y Parámetros Clave](https://www.devopsfreelance.pro/blog/posts/tunning-kernel-linux/)

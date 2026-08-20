@@ -1,3 +1,121 @@
+# Loki: Label-Indexed Logs, Prometheus-Style
+
+Code example for the post [Grafana Loki Tutorial: Prometheus-Style Log Aggregation](https://www.devopsfreelance.pro/blog/en/posts/grafana-loki-tutorial/).
+
+## What it demonstrates
+
+The post explains Grafana Loki's core idea: instead of indexing the full content of every log line (like Elasticsearch or other systems do), Loki indexes only **labels**, the same way Prometheus indexes series by labels instead of by each metric's value. The log content stays compressed and is only read when a query actually needs it.
+
+This example spins up:
+
+- **Loki** in monolithic mode (single binary) with local filesystem storage.
+- A **log generator** (`generate-logs.sh`) that pushes synthetic logs directly to Loki's HTTP API (`/loki/api/v1/push`), simulating what Promtail would do collecting logs from a real app. Each log carries the labels `job="demo-app"` and `level="info"` or `level="error"`.
+- **Grafana** with the Loki datasource already provisioned, to explore the logs with LogQL from the UI.
+- A `query-logs.sh` script that queries Loki from the command line using LogQL, showing how filtering happens **by label**, not by free text.
+
+## Requirements
+
+- Docker and Docker Compose (the `docker compose` plugin).
+- `curl` and `python3` on the host (used only by `query-logs.sh` to pretty-print JSON).
+
+## Steps to run it
+
+1. Bring up the stack:
+
+   ```bash
+   docker compose up -d
+   ```
+
+2. Wait about 15-20 seconds for Loki to finish initializing and the generator to start sending logs:
+
+   ```bash
+   docker logs -f log-generator
+   ```
+
+   (Ctrl+C to stop following, no need to wait for it to finish).
+
+3. Query the logs with LogQL from the terminal:
+
+   ```bash
+   ./query-logs.sh
+   ```
+
+4. (Optional) Explore in Grafana: open [http://localhost:3000](http://localhost:3000) (anonymous login enabled, you go straight in as Admin), go to **Explore**, pick the **Loki** datasource and run a LogQL query, for example:
+
+   ```logql
+   {job="demo-app"}
+   ```
+
+   or filtering only errors:
+
+   ```logql
+   {job="demo-app", level="error"}
+   ```
+
+5. Tear down the stack when you're done:
+
+   ```bash
+   docker compose down -v
+   ```
+
+## Expected output
+
+`./query-logs.sh` first shows the labels Loki knows about (the system's actual "index"):
+
+```json
+{
+    "status": "success",
+    "data": [
+        "job",
+        "level"
+    ]
+}
+```
+
+Then, the latest logs from the `{job="demo-app"}` stream, grouped by label combination (`level="info"` and `level="error"` end up in separate streams):
+
+```json
+{
+    "status": "success",
+    "data": {
+        "resultType": "streams",
+        "result": [
+            {
+                "stream": { "job": "demo-app", "level": "error" },
+                "values": [
+                    ["1787238989000000000", "{\"level\":\"error\",\"msg\":\"request procesado #10\",\"path\":\"/api/orders\"}"]
+                ]
+            },
+            {
+                "stream": { "job": "demo-app", "level": "info" },
+                "values": [
+                    ["1787238986000000000", "{\"level\":\"info\",\"msg\":\"request procesado #9\",\"path\":\"/api/orders\"}"]
+                ]
+            }
+        ]
+    }
+}
+```
+
+And finally, the same query but filtered to only `level="error"` (the equivalent of filtering a Prometheus metric by a label): only the stream with that label shows up, without having to scan the text of every line.
+
+## Files
+
+- `docker-compose.yml` - orchestrates Loki, the log generator, and Grafana.
+- `loki-config.yml` - minimal Loki configuration in monolithic mode (filesystem storage, boltdb-shipper).
+- `generate-logs.sh` - generates synthetic logs and pushes them to Loki via HTTP push, labeling them with `job` and `level`.
+- `grafana-datasource.yml` - automatically provisions the Loki datasource in Grafana.
+- `query-logs.sh` - queries Loki with LogQL from the terminal (available labels, all logs, errors only).
+
+## Notes
+
+- This example uses direct HTTP push instead of Promtail to keep it minimal and free of a Kubernetes cluster dependency. The `scrape_configs` configuration with `kubernetes_sd_configs` explained in the post is the real way to collect logs in a cluster; here it's replaced with a simple script that illustrates the same labeling concept.
+- Loki's data is stored in a volume inside the container; `docker compose down -v` removes it. No credentials or secrets are involved: `GF_AUTH_ANONYMOUS_ENABLED=true` is only meant to simplify the local demo, not for production use.
+
+---
+
+## 🇪🇸 Versión en español
+
 # Loki: logs indexados por etiquetas, estilo Prometheus
 
 Ejemplo de código para el post [Guía Completa de Loki para logs estilo prometheus](https://www.devopsfreelance.pro/blog/posts/loki-logs-estilo-prometheus/).
