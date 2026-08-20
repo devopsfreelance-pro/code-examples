@@ -106,11 +106,40 @@ K8S_FILES=$(grep -rlE '^kind:' "$DIR" --include='*.yaml' --include='*.yml' 2>/de
   | while read -r f; do grep -q 'kind.x-k8s.io' "$f" || echo "$f"; done | sort || true)
 if [ -n "$K8S_FILES" ]; then
   if kubectl cluster-info >/dev/null 2>&1; then
+    # Pre-crear los namespaces que los manifests referencian (los READMEs suelen
+    # crearlos con un kubectl create previo que el harness no ejecuta). Si un
+    # namespace esta Terminating (ejemplo anterior del shard), esperar a que muera.
+    NAMESPACES=$(echo "$K8S_FILES" | xargs -r grep -h '^\s*namespace:' 2>/dev/null | awk '{print $2}' | tr -d '"' | sort -u)
+    for ns in $NAMESPACES; do
+      for _ in $(seq 1 30); do
+        phase=$(kubectl get ns "$ns" -o jsonpath='{.status.phase}' 2>/dev/null || echo "ausente")
+        [ "$phase" != "Terminating" ] && break
+        sleep 3
+      done
+      kubectl create namespace "$ns" --dry-run=client -o yaml | kubectl apply -f - >/dev/null 2>&1
+    done
+
+    # Convencion: .ci-expect-fail lista archivos (rutas relativas al ejemplo) cuyo
+    # apply DEBE fallar (demuestran rechazo por validacion/policies).
+    EXPECT_FAIL=""
+    [ -f "$DIR/.ci-expect-fail" ] && EXPECT_FAIL=$(grep -v '^#' "$DIR/.ci-expect-fail" || true)
+
     APPLIED=()
     while IFS= read -r kf; do
-      echo "== k8s apply: $kf"
+      rel="${kf#"$DIR"/}"
+      expected_fail=false
+      echo "$EXPECT_FAIL" | grep -qx "$rel" && expected_fail=true
+      echo "== k8s apply: $kf (expect_fail=$expected_fail)"
       out=$(kubectl apply -f "$kf" 2>&1)
-      if [ $? -ne 0 ]; then
+      rc=$?
+      if $expected_fail; then
+        if [ $rc -ne 0 ]; then
+          echo "OK: rechazado como el ejemplo demuestra"
+        else
+          demote PARTIAL "se esperaba rechazo pero el apply paso (falta el validador en CI): $kf"
+          APPLIED+=("$kf")
+        fi
+      elif [ $rc -ne 0 ]; then
         if echo "$out" | grep -qiE 'no matches for kind|ensure CRDs are installed'; then
           demote PARTIAL "requiere CRDs/operador no instalado: $kf"
         else
@@ -121,9 +150,12 @@ if [ -n "$K8S_FILES" ]; then
         APPLIED+=("$kf")
       fi
     done <<< "$K8S_FILES"
-    # limpieza en orden inverso
+    # limpieza en orden inverso + namespaces creados
     for ((idx=${#APPLIED[@]}-1; idx>=0; idx--)); do
       kubectl delete -f "${APPLIED[$idx]}" --ignore-not-found --wait=false >/dev/null 2>&1
+    done
+    for ns in $NAMESPACES; do
+      kubectl delete namespace "$ns" --ignore-not-found --wait=false >/dev/null 2>&1
     done
   else
     demote PARTIAL "manifests K8s sin cluster disponible"

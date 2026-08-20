@@ -1,0 +1,2 @@
+# Archivos que DEBEN ser rechazados por la validacion del CRD (eso demuestran)
+examples/webapp-invalid.yaml
