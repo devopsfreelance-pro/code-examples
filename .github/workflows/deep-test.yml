@@ -18,7 +18,7 @@ jobs:
         run: |
           curl -sL https://get.opentofu.org/install-opentofu.sh -o /tmp/it.sh
           chmod +x /tmp/it.sh && /tmp/it.sh --install-method standalone > /dev/null
-          curl -sLo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64 && chmod +x /usr/local/bin/kind
+          sudo curl -sLo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64 && sudo chmod +x /usr/local/bin/kind
 
       - name: Create kind cluster (para dry-run server de manifests)
         run: kind create cluster --wait 90s
