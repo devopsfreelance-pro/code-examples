@@ -1,8 +1,6 @@
 name: Deep test examples
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 6 * * 6'  # sabados: control de calidad semanal profundo
+  workflow_dispatch:  # ejecucion manual solamente (el repo no cambia seguido)
 
 jobs:
   test:
