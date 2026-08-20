@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: user-database
+  description: Base de datos PostgreSQL de usuarios
+spec:
+  type: database
+  owner: team-identity
+  system: e-commerce

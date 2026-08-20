@@ -1,0 +1,11 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: zero-trust-demo
+networking:
+  # Desactivamos el CNI por defecto (kindnet) porque no aplica NetworkPolicy.
+  # Instalamos Calico despues para tener enforcement real de las politicas.
+  disableDefaultCNI: true
+  podSubnet: 192.168.0.0/16
+nodes:
+  - role: control-plane
+  - role: worker

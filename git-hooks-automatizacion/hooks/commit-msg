@@ -1,0 +1,22 @@
+#!/bin/bash
+# commit-msg: valida Conventional Commits.
+# Basado en el ejemplo de "Validacion de Mensajes de Commit" del post.
+
+commit_msg_file=$1
+commit_msg=$(cat "$commit_msg_file")
+
+if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .{1,}$"; then
+    echo "Error: el mensaje de commit no sigue el formato Conventional Commits"
+    echo "Formato esperado: tipo(alcance): descripcion"
+    echo "Tipos validos: feat, fix, docs, style, refactor, test, chore"
+    exit 1
+fi
+
+first_line=$(echo "$commit_msg" | head -n1)
+if [ ${#first_line} -gt 72 ]; then
+    echo "Error: la primera linea del commit excede 72 caracteres"
+    exit 1
+fi
+
+echo "Mensaje de commit valido (Conventional Commits)"
+exit 0

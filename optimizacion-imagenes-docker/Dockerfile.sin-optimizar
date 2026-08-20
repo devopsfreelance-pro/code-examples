@@ -1,0 +1,11 @@
+# Dockerfile SIN optimizar: una sola etapa, imagen base completa,
+# herramientas de compilacion incluidas en la imagen final.
+FROM golang:1.21
+
+WORKDIR /app
+COPY go.mod ./
+COPY main.go ./
+RUN go build -o main .
+
+EXPOSE 8080
+ENTRYPOINT ["/app/main"]

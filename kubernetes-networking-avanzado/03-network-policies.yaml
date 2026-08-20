@@ -1,0 +1,75 @@
+# Replica la segmentacion de "zonas de seguridad" del post: frontend puede
+# hablarle a backend, backend puede hablarle a database, pero frontend NO
+# puede saltarse backend y pegarle directo a database (aislamiento tipo
+# PCI-DSS del caso de comercio electronico).
+#
+# Estrategia: denegar todo el ingress por defecto en cada namespace protegido
+# y despues habilitar explicitamente solo el trafico necesario (whitelist).
+
+# --- backend: deny-all + permitir solo desde frontend ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: backend
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-frontend
+  namespace: backend
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              zone: frontend
+          podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 80
+---
+# --- database: deny-all + permitir solo desde backend ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: database
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-backend
+  namespace: database
+spec:
+  podSelector:
+    matchLabels:
+      app: database
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              zone: backend
+          podSelector:
+            matchLabels:
+              app: backend
+      ports:
+        - protocol: TCP
+          port: 80

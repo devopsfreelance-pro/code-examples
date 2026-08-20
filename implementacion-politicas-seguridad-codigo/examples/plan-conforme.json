@@ -1,0 +1,39 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.0",
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.logs",
+      "type": "aws_s3_bucket",
+      "name": "logs",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "bucket": "mi-empresa-logs-2026",
+          "server_side_encryption_configuration": {
+            "rule": {
+              "apply_server_side_encryption_by_default": {
+                "sse_algorithm": "aws:kms"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_s3_bucket_public_access_block.logs",
+      "type": "aws_s3_bucket_public_access_block",
+      "name": "logs",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "bucket": "mi-empresa-logs-2026",
+          "block_public_acls": true,
+          "block_public_policy": true,
+          "ignore_public_acls": true,
+          "restrict_public_buckets": true
+        }
+      }
+    }
+  ]
+}

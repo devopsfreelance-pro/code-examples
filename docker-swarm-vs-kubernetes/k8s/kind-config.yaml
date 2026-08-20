@@ -1,0 +1,10 @@
+# Cluster kind de un solo nodo con el NodePort 30080 expuesto en localhost:8080,
+# para poder curlear el Service igual que en la demo de Swarm sin port-forward.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP

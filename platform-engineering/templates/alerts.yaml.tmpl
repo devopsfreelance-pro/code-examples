@@ -1,0 +1,34 @@
+# PrometheusRule generado automaticamente para el servicio: $service_name
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: $service_name-alerts
+  labels:
+    app: $service_name
+    owner: $owner
+spec:
+  groups:
+    - name: $service_name.rules
+      rules:
+        - alert: ${service_name}HighErrorRate
+          expr: |
+            sum(rate(http_requests_total{app="$service_name",status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{app="$service_name"}[5m])) > 0.05
+          for: 10m
+          labels:
+            severity: warning
+            owner: $owner
+          annotations:
+            summary: "Tasa de errores 5xx alta en $service_name"
+            description: "Mas del 5% de las requests a $service_name devuelven 5xx en los ultimos 10 minutos."
+
+        - alert: ${service_name}PodDown
+          expr: kube_deployment_status_replicas_available{deployment="$service_name"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            owner: $owner
+          annotations:
+            summary: "$service_name sin replicas disponibles"
+            description: "El deployment $service_name no tiene pods disponibles hace mas de 5 minutos."

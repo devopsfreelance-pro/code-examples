@@ -1,0 +1,27 @@
+#!/bin/bash
+# hooks/commit-msg
+#
+# Valida que el mensaje de commit siga Conventional Commits, tal como lo
+# haría un hook server-side (pre-receive) en el repositorio remoto.
+# Aquí se instala como client-side (commit-msg) para poder demostrarlo
+# sin necesidad de levantar un servidor Git.
+#
+# Instalación: cp hooks/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
+
+set -euo pipefail
+
+commit_msg_file="$1"
+commit_msg=$(head -n1 "$commit_msg_file")
+
+pattern='^(feat|fix|docs|style|refactor|test|chore)(\([a-z0-9_-]+\))?: .+'
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+    echo "ERROR: el mensaje de commit no sigue Conventional Commits"
+    echo "Mensaje recibido: '$commit_msg'"
+    echo "Formato esperado: tipo(scope): descripción"
+    echo "Tipos válidos: feat, fix, docs, style, refactor, test, chore"
+    exit 1
+fi
+
+echo "Mensaje de commit válido (Conventional Commits)"
+exit 0

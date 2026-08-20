@@ -1,0 +1,49 @@
+# Deployment generado automaticamente para el servicio: $service_name
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $service_name
+  labels:
+    app: $service_name
+    owner: $owner
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: $service_name
+  template:
+    metadata:
+      labels:
+        app: $service_name
+    spec:
+      containers:
+        - name: $service_name
+          image: registry.example.com/$service_name:latest
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          env:
+            - name: SERVICE_NAME
+              value: "$service_name"
+            - name: DATABASE_ENGINE
+              value: "$database"
+            - name: CACHE_ENGINE
+              value: "$cache"

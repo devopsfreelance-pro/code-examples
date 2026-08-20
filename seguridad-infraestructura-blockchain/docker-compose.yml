@@ -1,0 +1,26 @@
+# Demuestra el error mas comun descrito en el post: exponer el RPC de un
+# nodo blockchain a toda la red (0.0.0.0) en vez de restringirlo a
+# localhost/red interna.
+#
+# node-inseguro   -> puerto publicado en TODAS las interfaces (0.0.0.0:8545)
+# node-seguro     -> puerto publicado SOLO en loopback (127.0.0.1:8546)
+#
+# En un host real, node-inseguro seria alcanzable desde Internet si no hay
+# firewall delante; node-seguro solo responde a quien ya esta en la misma
+# maquina (equivalente a --http.addr 127.0.0.1 en geth).
+services:
+  node-inseguro:
+    build: .
+    image: mock-rpc:local
+    container_name: node-inseguro
+    command: ["0.0.0.0", "8545"]
+    ports:
+      - "8545:8545"          # mal: publicado en todas las interfaces del host
+
+  node-seguro:
+    build: .
+    image: mock-rpc:local
+    container_name: node-seguro
+    command: ["0.0.0.0", "8546"]
+    ports:
+      - "127.0.0.1:8546:8546"  # bien: solo accesible desde localhost del host

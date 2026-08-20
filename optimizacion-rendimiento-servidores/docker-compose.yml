@@ -1,0 +1,22 @@
+services:
+  nginx-baseline:
+    image: nginx:1.27-alpine
+    container_name: nginx-baseline
+    ports:
+      - "8081:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    # Sin ajustes de kernel: valores por defecto de Docker/Linux.
+
+  nginx-tuned:
+    image: nginx:1.27-alpine
+    container_name: nginx-tuned
+    ports:
+      - "8082:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    sysctls:
+      # Mismos parametros que menciona el post: tamano de la cola de
+      # conexiones pendientes y liberacion mas rapida de sockets en TIME_WAIT.
+      net.core.somaxconn: 4096
+      net.ipv4.tcp_fin_timeout: 15

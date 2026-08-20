@@ -1,0 +1,52 @@
+[
+  {
+    "description": "App autorizada lee un objeto del bucket de datos, desde la IP permitida y por HTTPS",
+    "action": "s3:GetObject",
+    "resource": "arn:aws:s3:::mi-bucket-datos/reporte.csv",
+    "context": {
+      "aws:SourceIp": "192.0.2.10",
+      "aws:SecureTransport": "true"
+    },
+    "expected": "Allow"
+  },
+  {
+    "description": "Misma app intenta acceder a un bucket que NO esta en la policy (fuera de alcance)",
+    "action": "s3:GetObject",
+    "resource": "arn:aws:s3:::otro-bucket-cualquiera/archivo.txt",
+    "context": {
+      "aws:SourceIp": "192.0.2.10",
+      "aws:SecureTransport": "true"
+    },
+    "expected": "Deny"
+  },
+  {
+    "description": "Misma app intenta el mismo GetObject pero por HTTP en texto plano (sin TLS)",
+    "action": "s3:GetObject",
+    "resource": "arn:aws:s3:::mi-bucket-datos/reporte.csv",
+    "context": {
+      "aws:SourceIp": "192.0.2.10",
+      "aws:SecureTransport": "false"
+    },
+    "expected": "Deny"
+  },
+  {
+    "description": "Administrador de IAM operando desde la red corporativa confiable (10.0.0.0/8)",
+    "action": "iam:CreateUser",
+    "resource": "arn:aws:iam::123456789012:user/nuevo-empleado",
+    "context": {
+      "aws:SourceIp": "10.1.2.3",
+      "aws:SecureTransport": "true"
+    },
+    "expected": "Allow"
+  },
+  {
+    "description": "Alguien con la policy de administrador de IAM intenta usarla desde fuera de la red confiable: el guardrail de deny explicito gana",
+    "action": "iam:CreateUser",
+    "resource": "arn:aws:iam::123456789012:user/nuevo-empleado",
+    "context": {
+      "aws:SourceIp": "198.51.100.5",
+      "aws:SecureTransport": "true"
+    },
+    "expected": "Deny"
+  }
+]

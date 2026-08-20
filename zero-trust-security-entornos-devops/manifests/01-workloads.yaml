@@ -1,0 +1,93 @@
+# Tres workloads simples que representan los tres tiers tipicos de una app:
+# frontend (recibe trafico de "clientes"), backend (API) y database (datos).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: zero-trust-demo
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: curlimages/curl:8.9.1
+          command: ["sleep", "infinity"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: zero-trust-demo
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: nginxdemos/hello:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: zero-trust-demo
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database
+  namespace: zero-trust-demo
+  labels:
+    app: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      containers:
+        - name: database
+          image: nginxdemos/hello:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: database
+  namespace: zero-trust-demo
+spec:
+  selector:
+    app: database
+  ports:
+    - port: 80
+      targetPort: 80

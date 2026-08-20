@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  api:
+    image: python:3.11-slim
+    container_name: chaos-demo-api
+    volumes:
+      - ./api:/app:ro
+    working_dir: /app
+    command: python app.py
+    networks:
+      - chaos-net
+
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.9.0
+    container_name: chaos-demo-toxiproxy
+    depends_on:
+      - api
+    ports:
+      - "8474:8474"
+      - "8080:8080"
+    volumes:
+      - ./toxiproxy.json:/config/toxiproxy.json:ro
+    command: ["-host=0.0.0.0", "-config=/config/toxiproxy.json"]
+    networks:
+      - chaos-net
+
+networks:
+  chaos-net:
+    driver: bridge

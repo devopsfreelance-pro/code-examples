@@ -1,0 +1,47 @@
+{
+  "title": "Demo App - Prometheus",
+  "uid": "demo-app-overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Requests por segundo (success vs error)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(app_requests_total[1m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Latencia promedio (segundos)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(app_request_duration_seconds_sum[1m]) / rate(app_request_duration_seconds_count[1m])",
+          "legendFormat": "latencia_promedio"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Tasa de error (%)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "100 * sum(rate(app_requests_total{status=\"error\"}[1m])) / sum(rate(app_requests_total[1m]))",
+          "legendFormat": "error_rate"
+        }
+      ]
+    }
+  ]
+}

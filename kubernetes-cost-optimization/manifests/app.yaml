@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cost-demo
+  labels:
+    environment: dev
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: team-backend-quota
+  namespace: cost-demo
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: 2Gi
+    limits.cpu: "4"
+    limits.memory: 4Gi
+    pods: "10"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-catalogo
+  namespace: cost-demo
+  labels:
+    app: api-catalogo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-catalogo
+  template:
+    metadata:
+      labels:
+        app: api-catalogo
+    spec:
+      containers:
+        - name: api
+          image: nginxdemos/hello:plain-text
+          ports:
+            - containerPort: 80
+          # Requests/limits deliberadamente sobredimensionados: la app real
+          # (un nginx casi en reposo) consume unos pocos mCPU y ~10-20Mi,
+          # pero el equipo pidio "por si acaso" 1 CPU y 1Gi por pod.
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi

@@ -1,0 +1,56 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+default:
+  image: python:3.11-slim
+  cache:
+    key: pip-cache
+    paths:
+      - .cache/pip
+
+build:
+  stage: build
+  script:
+    - cd app
+    - pip install --quiet pytest
+    - python -c "import app; print('app.py importa correctamente')"
+  artifacts:
+    paths:
+      - app/
+    expire_in: 1 hour
+
+test:
+  stage: test
+  needs: ["build"]
+  script:
+    - cd app
+    - pip install --quiet pytest
+    - pytest -v --junitxml=report.xml
+  artifacts:
+    when: always
+    paths:
+      - app/report.xml
+    reports:
+      junit: app/report.xml
+
+deploy:
+  stage: deploy
+  needs: ["test"]
+  script:
+    - echo "Empaquetando release a partir de los artefactos de build/test"
+    - mkdir -p dist
+    - tar -czf dist/app-$CI_COMMIT_SHORT_SHA.tar.gz -C app app.py
+    - echo "Deploy simulado -> entorno=staging paquete=dist/app-$CI_COMMIT_SHORT_SHA.tar.gz"
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: on_success
+    - when: manual

@@ -1,0 +1,26 @@
+services:
+  sensor-exporter:
+    build: .
+    container_name: edge-sensor-exporter
+    ports:
+      - "9100:9100"
+
+  prometheus-edge:
+    image: prom/prometheus:v2.53.0
+    container_name: edge-prometheus
+    volumes:
+      - ./prometheus-edge.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - sensor-exporter
+
+  prometheus-central:
+    image: prom/prometheus:v2.53.0
+    container_name: central-prometheus
+    volumes:
+      - ./prometheus-central.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9091:9090"
+    depends_on:
+      - prometheus-edge

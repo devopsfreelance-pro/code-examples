@@ -1,0 +1,30 @@
+# Pipeline generado automaticamente para el servicio: $service_name
+name: ci-cd
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t $service_name:$${{ github.sha }} .
+
+      - name: Run tests
+        run: echo "npm test (placeholder generado por el template)"
+
+      - name: Push image
+        if: github.ref == 'refs/heads/main'
+        run: echo "docker push registry.example.com/$service_name:$${{ github.sha }}"
+
+      - name: Update K8s manifest
+        if: github.ref == 'refs/heads/main'
+        run: |
+          sed -i "s#image:.*#image: registry.example.com/$service_name:$${{ github.sha }}#" k8s/deployment.yaml
+          echo "ArgoCD sincroniza el cambio automaticamente al detectar el commit en k8s/"

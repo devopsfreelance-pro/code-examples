@@ -1,0 +1,10 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: netpol-demo
+networking:
+  # Desactivamos el CNI por defecto (kindnet) porque no aplica NetworkPolicies.
+  # Instalamos Calico despues de crear el cluster para tener enforcement real.
+  disableDefaultCNI: true
+  podSubnet: "192.168.0.0/16"
+nodes:
+  - role: control-plane

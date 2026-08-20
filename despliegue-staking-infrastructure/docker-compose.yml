@@ -1,0 +1,73 @@
+services:
+  # Base de datos de proteccion contra slashing (EIP-3076).
+  # Web3Signer registra aqui cada firma emitida para rechazar
+  # doble propuesta / doble atestacion.
+  postgres:
+    image: postgres:16
+    container_name: staking-slashing-db
+    environment:
+      POSTGRES_DB: web3signer
+      POSTGRES_USER: web3signer
+      POSTGRES_PASSWORD: web3signer_demo # demo local, no usar en produccion
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U web3signer -d web3signer"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    networks:
+      - validator-net
+
+  # Aplica el esquema de la base de proteccion contra slashing
+  # (los mismos scripts que trae la imagen oficial de Web3Signer
+  # en /opt/web3signer/migrations/postgresql) y termina.
+  migrate:
+    image: flyway/flyway:10
+    container_name: staking-slashing-db-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/flyway/sql
+    command:
+      - -url=jdbc:postgresql://postgres:5432/web3signer
+      - -user=web3signer
+      - -password=web3signer_demo
+      - -connectRetries=10
+      - migrate
+    networks:
+      - validator-net
+
+  # Remote signer: separa las claves de validador del nodo que
+  # las opera. Ningun cliente de consenso llega a ver la clave
+  # privada; solo habla HTTP con Web3Signer.
+  web3signer:
+    image: consensys/web3signer:latest
+    container_name: staking-web3signer
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    command:
+      - --key-store-path=/data/keys
+      - --http-listen-host=0.0.0.0
+      - --http-listen-port=9000
+      - --http-host-allowlist=*
+      - eth2
+      - --network=mainnet
+      - --slashing-protection-enabled=true
+      - --slashing-protection-db-url=jdbc:postgresql://postgres:5432/web3signer
+      - --slashing-protection-db-username=web3signer
+      - --slashing-protection-db-password=web3signer_demo
+    volumes:
+      - ./keys:/data/keys:ro
+    ports:
+      - "127.0.0.1:9000:9000" # solo accesible localmente, igual que en el post
+    networks:
+      - validator-net
+
+volumes:
+  pgdata:
+
+networks:
+  validator-net:

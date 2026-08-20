@@ -1,0 +1,15 @@
+{
+  "name": "blockchain-testing-con-devnets-privadas",
+  "version": "1.0.0",
+  "description": "Ejemplo minimo de blockchain testing con una devnet privada (Hardhat Network) para el post de DevOps Freelance Pro",
+  "private": true,
+  "scripts": {
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost"
+  },
+  "devDependencies": {
+    "hardhat": "^2.22.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "new-dashboard-design": {
+    "enabled": true,
+    "rollout_percentage": 25,
+    "description": "Nuevo diseño de dashboard (release toggle)"
+  },
+  "checkout-experiment-b": {
+    "enabled": true,
+    "rollout_percentage": 50,
+    "description": "Variante B del checkout (experiment toggle A/B)"
+  },
+  "maintenance-mode": {
+    "enabled": false,
+    "rollout_percentage": 100,
+    "description": "Kill switch de emergencia (ops toggle)"
+  }
+}

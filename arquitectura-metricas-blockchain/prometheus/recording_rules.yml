@@ -1,0 +1,22 @@
+# Recording rules del post: KPIs de negocio pre-calculados para no
+# recalcularlos en cada dashboard/alerta.
+groups:
+  - name: blockchain-aggregations
+    interval: 30s
+    rules:
+      # Transacciones por segundo (TPS)
+      - record: blockchain:tps:rate5m
+        expr: sum(rate(chain_transactions_total[5m]))
+
+      # Finality time: epochs desde la ultima finalizacion
+      - record: blockchain:finality_gap:epochs
+        expr: beacon_head_slot / 32 - beacon_finalized_epoch
+
+      # Attestation effectiveness por nodo
+      - record: blockchain:attestation_effectiveness:avg
+        expr: avg by (node_id) (validator_attestation_hit_percentage)
+
+      # Uso de disco por nodo (capacity planning)
+      - record: blockchain:disk_usage_percent:by_node
+        expr: 1 - (node_filesystem_avail_bytes{mountpoint="/data"}
+          / node_filesystem_size_bytes{mountpoint="/data"})

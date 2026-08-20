@@ -1,0 +1,109 @@
+# 1) flagger-loadtester: genera tráfico real contra el Service canary
+#    durante el análisis, para que existan métricas que evaluar y para
+#    correr el smoke test del webhook "pre-rollout".
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flagger-loadtester
+  namespace: test
+  labels:
+    app: flagger-loadtester
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flagger-loadtester
+  template:
+    metadata:
+      labels:
+        app: flagger-loadtester
+    spec:
+      containers:
+        - name: loadtester
+          image: ghcr.io/fluxcd/flagger-loadtester:0.32.0
+          ports:
+            - name: http
+              containerPort: 8080
+          command:
+            - ./loadtester
+            - -port=8080
+            - -log-level=info
+          readinessProbe:
+            exec:
+              command:
+                - wget
+                - --quiet
+                - --tries=1
+                - --output-document=-
+                - http://localhost:8080/healthz
+            initialDelaySeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flagger-loadtester
+  namespace: test
+spec:
+  selector:
+    app: flagger-loadtester
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+---
+# 2) Canary: el recurso central de Flagger. Describe el Deployment target
+#    (podinfo), cómo generar los objetos primary/canary, y el análisis
+#    progresivo: cada "stepWeight" segundos aumenta el tráfico hacia la
+#    versión nueva mientras se cumplan las métricas de éxito. Si alguna
+#    falla más de "threshold" veces seguidas, Flagger revierte el
+#    despliegue automáticamente al 0% de tráfico canary.
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: podinfo
+  namespace: test
+spec:
+  # Deployment que Flagger va a clonar en podinfo-primary y usar como base
+  # para el rollout progresivo.
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: podinfo
+  progressDeadlineSeconds: 60
+  service:
+    port: 9898
+    targetPort: 9898
+  analysis:
+    # Cada 15s Flagger evalúa las métricas y decide si avanza, se queda
+    # esperando o revierte.
+    interval: 15s
+    # Cantidad de fallos consecutivos tolerados antes de hacer rollback.
+    threshold: 5
+    # Tope máximo de tráfico canary antes de promover al 100%.
+    maxWeight: 50
+    # Incremento de tráfico canary en cada iteración exitosa (10% -> 20% -> ...).
+    stepWeight: 10
+    # Nota: request-success-rate/request-duration (métricas estándar de
+    # Flagger) requieren un proveedor de métricas de service mesh (Istio,
+    # Linkerd, App Mesh, etc.). Este ejemplo usa el provider "kubernetes"
+    # (sin mesh) para no depender de instalar Istio, así que la validación
+    # de cada paso del canary se hace 100% vía webhooks: si el smoke test
+    # o el load test fallan "threshold" veces seguidas, Flagger revierte.
+    webhooks:
+      # Smoke test antes de empezar a mover tráfico: si falla, ni siquiera
+      # arranca el canary.
+      - name: smoke-test
+        type: pre-rollout
+        url: http://flagger-loadtester.test/
+        timeout: 15s
+        metadata:
+          type: bash
+          cmd: "curl -s http://podinfo-canary.test:9898/token | grep token"
+      # Genera carga contra el Service canary durante todo el análisis,
+      # necesaria para que existan datos de request-success-rate/duration.
+      - name: load-test
+        type: rollout
+        url: http://flagger-loadtester.test/
+        timeout: 5s
+        metadata:
+          cmd: "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"

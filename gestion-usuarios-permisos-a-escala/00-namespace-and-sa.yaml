@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: development
+---
+# ServiceAccount que representa a un desarrollador provisionado por el
+# pipeline de onboarding (ver README, sección "Pipeline de provisioning"
+# del post).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: developer-sa
+  namespace: development
+---
+# ServiceAccount que representa a un integrante del equipo de seguridad,
+# con permisos distintos (separación de responsabilidades).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: security-sa
+  namespace: development

@@ -1,0 +1,30 @@
+# Configuracion minima de un Docker Registry v2 (OCI distribution spec).
+# Referencia: https://github.com/distribution/distribution/blob/main/docs/content/about/configuration.md
+version: 0.1
+log:
+  level: info
+  fields:
+    service: registry
+
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+  delete:
+    enabled: true
+
+http:
+  addr: :5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
+
+# Para convertir este registro en un "pull-through cache" de Docker Hub
+# (patron mencionado en el post para reducir egress y latencia), agregar:
+#
+# proxy:
+#   remoteurl: https://registry-1.docker.io

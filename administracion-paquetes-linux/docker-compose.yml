@@ -1,0 +1,4 @@
+services:
+  apt-demo:
+    build: .
+    container_name: apt-demo

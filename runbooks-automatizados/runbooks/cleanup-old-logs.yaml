@@ -1,0 +1,46 @@
+# Runbook automatizado: limpieza de logs viejos
+#
+# Sigue la estructura de "Estructura de un Runbook Efectivo" del post:
+# metadatos, parametros, pre-validaciones, pasos, manejo de errores,
+# post-validaciones y notificaciones.
+
+metadata:
+  name: cleanup-old-logs
+  description: >
+    Elimina archivos de log con mas de N dias de antiguedad en un directorio
+    objetivo, para liberar espacio de forma automatica y auditable.
+  owner: sre-team
+  criticality: media
+  last_reviewed: "2026-08-19"
+
+trigger:
+  type: schedule
+  detail: "cron diario 03:00, o manual via --dry-run para simulacion"
+
+params:
+  target_dir: "demo_workspace/logs"
+  max_age_days: 30
+
+pre_validations:
+  - check_directory_exists
+
+steps:
+  - name: contar_archivos_viejos
+    action: count_old_files
+    description: Cuenta cuantos archivos superan max_age_days antes de tocar nada.
+
+  - name: eliminar_archivos_viejos
+    action: delete_old_files
+    description: >
+      Elimina los archivos identificados. Idempotente: si se corre de nuevo
+      y no quedan archivos viejos, no falla, simplemente no borra nada.
+
+post_validations:
+  - name: verificar_limpieza
+    action: verify_cleanup
+    description: Confirma que no queden archivos viejos en el directorio.
+
+notifications:
+  channel: console
+  on_success: "Limpieza de logs completada"
+  on_failure: "Fallo en limpieza de logs, revisar log estructurado"

@@ -1,0 +1,8 @@
+[
+  {
+    "name": "payment_service",
+    "listen": "0.0.0.0:8080",
+    "upstream": "api:5000",
+    "enabled": true
+  }
+]

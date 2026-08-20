@@ -1,0 +1,34 @@
+# Politica de auditoria de Kubernetes referida en el post.
+# Se incluye como referencia validable con kubectl/kind (ver README),
+# no se aplica automaticamente por el script Python.
+apiVersion: audit.k8s.io/v1
+kind: Policy
+metadata:
+  name: gdpr-audit-policy
+rules:
+  # Auditar todos los accesos a recursos que contienen datos personales
+  - level: RequestResponse
+    resources:
+      - group: ""
+        resources: ["secrets", "configmaps"]
+    namespaces: ["production", "customer-data"]
+
+  # Auditar operaciones de lectura/escritura en cargas que procesan datos
+  - level: Metadata
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    resources:
+      - group: "apps"
+        resources: ["deployments", "statefulsets"]
+
+  # Registrar accesos a servicios de almacenamiento
+  - level: Request
+    resources:
+      - group: "storage.k8s.io"
+        resources: ["storageclasses", "persistentvolumes"]
+
+  # Omitir eventos de bajo riesgo para reducir volumen de logs
+  - level: None
+    verbs: ["get", "list", "watch"]
+    resources:
+      - group: ""
+        resources: ["events", "nodes", "pods/status"]

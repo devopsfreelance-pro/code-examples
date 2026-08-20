@@ -1,0 +1,13 @@
+groups:
+  - name: incident-demo
+    rules:
+      - alert: APIErrorRateHigh
+        expr: demo_api_error_rate > 0.05
+        # En produccion se usa "for: 5m" (ver post). Aqui se acorta a 30s
+        # para poder ver el ciclo completo de deteccion -> alerta en la demo.
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alta tasa de errores en la API ({{ $value | humanizePercentage }})"
+          runbook: "https://runbooks.example.com/api-errors"

@@ -1,0 +1,23 @@
+# Defaults seguros para cualquier ambiente.
+# Los archivos values-<ambiente>.yaml solo deben declarar diffs sobre esta base.
+
+environment: development
+
+image:
+  repository: nginx
+  tag: "1.27"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+service:
+  type: ClusterIP
+  port: 80

@@ -1,0 +1,18 @@
+## Ejemplo de solicitud de un desarrollador al catalogo de autoservicio
+## Mismo formato que el ejemplo del post: el desarrollador solo declara
+## QUE necesita, no COMO se aprovisiona.
+apiVersion: platform.company.com/v1
+kind: ServiceRequest
+metadata:
+  name: orders-api-dev
+spec:
+  template: nodejs-microservice
+  environment: development
+  resources:
+    compute: small
+    database: postgres-dev
+  integrations:
+    - monitoring
+    - logging
+  gitRepository: https://github.com/company/orders-api
+  owner: payments-team

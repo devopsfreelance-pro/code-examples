@@ -1,0 +1,35 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    container_name: jaeger
+    ports:
+      - "16686:16686"   # UI de Jaeger
+      - "4318:4318"     # OTLP HTTP receiver
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+
+  service-b:
+    build: .
+    container_name: service-b
+    command: ["python", "service_b.py"]
+    environment:
+      OTEL_SERVICE_NAME: service-b
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+    ports:
+      - "8001:8001"
+    depends_on:
+      - jaeger
+
+  service-a:
+    build: .
+    container_name: service-a
+    command: ["python", "service_a.py"]
+    environment:
+      OTEL_SERVICE_NAME: service-a
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      SERVICE_B_URL: http://service-b:8001
+    ports:
+      - "8000:8000"
+    depends_on:
+      - service-b
+      - jaeger

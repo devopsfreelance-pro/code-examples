@@ -1,0 +1,14 @@
+# Pilar de Zero Trust: "nunca confiar, siempre verificar".
+# Esta politica bloquea TODO el trafico de entrada y salida en el namespace
+# por defecto. Sin esto, cualquier pod puede hablar con cualquier otro
+# (confianza implicita), que es justo el modelo que Zero Trust rechaza.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: zero-trust-demo
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress

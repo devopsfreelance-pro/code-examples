@@ -1,0 +1,15 @@
+# Spec de autoservicio que un developer completaría en el catálogo de la
+# plataforma interna, tal como se describe en el post ("Implementación
+# Práctica: Construyendo Tu Primera Internal Platform"). El developer no
+# escribe Deployment/Service/Ingress de Kubernetes: pide esto.
+apiVersion: platform.company.com/v1
+kind: WebApplication
+metadata:
+  name: mi-aplicacion
+spec:
+  image: nginxdemos/hello:latest
+  replicas: 2
+  resources:
+    cpu: 100m
+    memory: 128Mi
+  port: 80

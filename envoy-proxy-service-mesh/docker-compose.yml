@@ -1,0 +1,22 @@
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.30-latest
+    container_name: envoy
+    ports:
+      - "10000:10000"   # tráfico de la app, pasa por Envoy
+      - "9901:9901"     # admin interface (config_dump, clusters, stats)
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
+    depends_on:
+      - backend-v1
+      - backend-v2
+
+  backend-v1:
+    image: hashicorp/http-echo:1.0.0
+    container_name: backend-v1
+    command: ["-listen=:5678", "-text=respuesta de pagos v1"]
+
+  backend-v2:
+    image: hashicorp/http-echo:1.0.0
+    container_name: backend-v2
+    command: ["-listen=:5678", "-text=respuesta de pagos v2"]

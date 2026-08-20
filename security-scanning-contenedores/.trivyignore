@@ -1,0 +1,7 @@
+# Ejemplo de gestion explicita de excepciones (ver seccion "Buenas Practicas
+# de Integracion" del post). Cada excepcion documenta motivo y fecha de
+# revision, nunca se ignora una CVE sin justificacion.
+#
+# CVE-2021-23337 - lodash: prototype pollution via template. No usamos
+# _.template() en este demo, riesgo no explotable. Revisar: 2026-09-23.
+CVE-2021-23337

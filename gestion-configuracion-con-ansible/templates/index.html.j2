@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ansible Demo - {{ inventory_hostname }}</title>
+</head>
+<body>
+  <h1>Servidor gestionado con Ansible</h1>
+  <p>Host: {{ inventory_hostname }}</p>
+  <p>Entorno: {{ environment_name }}</p>
+  <p>Puerto configurado: {{ http_port }}</p>
+  <p>Esta página fue desplegada de forma declarativa e idempotente.</p>
+</body>
+</html>

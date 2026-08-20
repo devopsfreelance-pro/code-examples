@@ -1,0 +1,18 @@
+# Regla de alerta de ejemplo del post: dispara cuando el uso de CPU
+# promedio del nodo supera el 80% durante 5 minutos.
+#
+# No forma parte del stack ejecutable de este ejemplo (no incluye
+# Prometheus ni node_exporter, ver README), se deja como referencia
+# lista para copiar a un Prometheus real que ya scrapee node_exporter.
+
+groups:
+  - name: performance-diagnostics
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for 5 minutes"

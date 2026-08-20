@@ -1,0 +1,16 @@
+[package]
+name = "wasm-infra-demo"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+spin-sdk = "3.1.0"
+anyhow = "1"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true

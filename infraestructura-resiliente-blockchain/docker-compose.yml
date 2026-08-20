@@ -1,0 +1,56 @@
+services:
+  node-a:
+    build: ./app
+    environment:
+      NODE_ID: node-a
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 3s
+      timeout: 2s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - blockchain-network
+
+  node-b:
+    build: ./app
+    environment:
+      NODE_ID: node-b
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 3s
+      timeout: 2s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - blockchain-network
+
+  node-c:
+    build: ./app
+    environment:
+      NODE_ID: node-c
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 3s
+      timeout: 2s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - blockchain-network
+
+  load-balancer:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - node-a
+      - node-b
+      - node-c
+    networks:
+      - blockchain-network
+
+networks:
+  blockchain-network:
+    driver: bridge

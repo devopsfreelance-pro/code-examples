@@ -1,0 +1,155 @@
+# Manifiestos que ilustran las prácticas "production-ready" del post:
+# LimitRange, requests/limits, probes, HPA, NetworkPolicy y PodDisruptionBudget.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+---
+# LimitRange: valores por defecto si un Deployment no define resources
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-limits
+  namespace: production
+spec:
+  limits:
+    - default:
+        cpu: 500m
+        memory: 128Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 64Mi
+      type: Container
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-demo
+  namespace: production
+  labels:
+    app: api-demo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api-demo
+  template:
+    metadata:
+      labels:
+        app: api-demo
+    spec:
+      containers:
+        - name: api
+          image: nginxdemos/hello:plain-text
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            failureThreshold: 15
+            periodSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-demo
+  namespace: production
+spec:
+  selector:
+    app: api-demo
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-demo-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-demo
+  minReplicas: 3
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 30
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-demo-pdb
+  namespace: production
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: api-demo
+---
+# Deny-all ingress por defecto en el namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Solo pods con label role=client pueden hablarle a api-demo, y solo al puerto 80
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-client-to-api
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: api-demo
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              role: client
+      ports:
+        - protocol: TCP
+          port: 80

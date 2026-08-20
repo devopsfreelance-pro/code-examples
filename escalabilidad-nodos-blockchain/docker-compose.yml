@@ -1,0 +1,48 @@
+services:
+  node1:
+    build: ./mock-node
+    container_name: blockchain-node1
+    environment:
+      - NODE_ID=node1
+      - START_BLOCK=18000000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8545/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  node2:
+    build: ./mock-node
+    container_name: blockchain-node2
+    environment:
+      - NODE_ID=node2
+      - START_BLOCK=18000000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8545/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  node3:
+    build: ./mock-node
+    container_name: blockchain-node3
+    environment:
+      - NODE_ID=node3
+      - START_BLOCK=18000000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8545/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  nginx-lb:
+    image: nginx:1.27-alpine
+    container_name: blockchain-lb
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - node1
+      - node2
+      - node3

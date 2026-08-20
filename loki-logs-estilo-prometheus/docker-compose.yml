@@ -1,0 +1,42 @@
+services:
+  loki:
+    image: grafana/loki:2.9.6
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./loki-config.yml:/etc/loki/loki-config.yml:ro
+    networks:
+      - loki-net
+
+  log-generator:
+    image: alpine:3.19
+    container_name: log-generator
+    depends_on:
+      - loki
+    volumes:
+      - ./generate-logs.sh:/generate-logs.sh:ro
+    command: sh /generate-logs.sh
+    networks:
+      - loki-net
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    volumes:
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+    depends_on:
+      - loki
+    networks:
+      - loki-net
+
+networks:
+  loki-net:
+    driver: bridge

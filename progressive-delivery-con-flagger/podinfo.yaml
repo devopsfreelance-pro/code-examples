@@ -1,0 +1,55 @@
+# App de ejemplo (podinfo, mantenida por el propio creador de Flagger) que
+# actúa como "target" del despliegue canary. Flagger va a generar
+# automáticamente los objetos podinfo-primary y podinfo-canary a partir de
+# este Deployment cuando se aplique el Canary de canary.yaml.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: podinfo
+  namespace: test
+  labels:
+    app: podinfo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: podinfo
+  template:
+    metadata:
+      labels:
+        app: podinfo
+    spec:
+      containers:
+        - name: podinfod
+          image: ghcr.io/stefanprodan/podinfo:6.5.4
+          ports:
+            - containerPort: 9898
+              name: http
+          command:
+            - ./podinfo
+            - --port=9898
+            - --level=info
+          readinessProbe:
+            exec:
+              command:
+                - wget
+                - --quiet
+                - --tries=1
+                - --output-document=-
+                - http://localhost:9898/healthz
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - wget
+                - --quiet
+                - --tries=1
+                - --output-document=-
+                - http://localhost:9898/healthz
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi

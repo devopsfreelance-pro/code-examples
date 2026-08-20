@@ -1,0 +1,6 @@
+{
+  "service": "myapp",
+  "environment": "staging",
+  "replicas": 3,
+  "image": "myapp:latest"
+}

@@ -1,0 +1,8 @@
+services:
+  hardening-lab:
+    build: .
+    container_name: hardening-lab
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    tty: true

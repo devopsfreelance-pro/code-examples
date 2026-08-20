@@ -1,0 +1,19 @@
+## Misma solicitud, pero pidiendo un tamano de compute no aprobado para
+## el ambiente "development". Sirve para ver como el guardrail de gobernanza
+## rechaza la solicitud ANTES de tocar Terraform (seccion "capa de control
+## y gobernanza" del post).
+apiVersion: platform.company.com/v1
+kind: ServiceRequest
+metadata:
+  name: orders-api-dev
+spec:
+  template: nodejs-microservice
+  environment: development
+  resources:
+    compute: xlarge
+    database: postgres-dev
+  integrations:
+    - monitoring
+    - logging
+  gitRepository: https://github.com/company/orders-api
+  owner: payments-team

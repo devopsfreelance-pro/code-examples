@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  node1:
+    build: .
+    container_name: node1
+    environment:
+      NODE_ID: node-1
+      START_HEIGHT: "1000"
+      BLOCK_INTERVAL: "5"
+      LAGGING: "false"
+    ports:
+      - "8001:8000"
+
+  node2:
+    build: .
+    container_name: node2
+    environment:
+      NODE_ID: node-2
+      START_HEIGHT: "1000"
+      BLOCK_INTERVAL: "5"
+      LAGGING: "false"
+    ports:
+      - "8002:8000"
+
+  # Nodo simulado con problemas de sincronizacion: es el caso de uso
+  # central del post (detectar anomalias entre nodos de una red blockchain).
+  node3:
+    build: .
+    container_name: node3
+    environment:
+      NODE_ID: node-3
+      START_HEIGHT: "1000"
+      BLOCK_INTERVAL: "5"
+      LAGGING: "true"
+    ports:
+      - "8003:8000"
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - node1
+      - node2
+      - node3
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus

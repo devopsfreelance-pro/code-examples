@@ -1,0 +1,14 @@
+FROM python:3.9-slim-bullseye
+
+WORKDIR /app
+
+# Dependencias con versiones desactualizadas a proposito para que Trivy
+# encuentre CVEs conocidas (fines demostrativos, no usar en produccion).
+RUN pip install --no-cache-dir \
+    flask==1.0 \
+    requests==2.20.0 \
+    pyyaml==5.1
+
+COPY app.py .
+
+CMD ["python", "app.py"]

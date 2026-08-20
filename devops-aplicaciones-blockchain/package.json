@@ -1,0 +1,16 @@
+{
+  "name": "devops-blockchain-ci-demo",
+  "version": "1.0.0",
+  "description": "Pipeline CI/CD minimo para un smart contract (compilar, lint, testear) - ejemplo del post DevOps para aplicaciones blockchain",
+  "private": true,
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "lint": "solhint 'contracts/**/*.sol'"
+  },
+  "devDependencies": {
+    "hardhat": "^2.22.5",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "solhint": "^5.0.1"
+  }
+}

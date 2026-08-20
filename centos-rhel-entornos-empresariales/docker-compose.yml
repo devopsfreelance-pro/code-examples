@@ -1,0 +1,4 @@
+services:
+  rocky-rpm-demo:
+    build: .
+    container_name: rpm-repo-demo

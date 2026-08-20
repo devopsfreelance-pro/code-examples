@@ -1,0 +1,42 @@
+groups:
+  - name: blockchain-node-alerts
+    rules:
+      # Sincronizacion: el nodo esta muy atras respecto a la red
+      - alert: NodeOutOfSync
+        expr: (ethereum_blockchain_height - chain_head_block) > 50
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nodo desincronizado por mas de 50 bloques"
+          description: "El nodo {{ $labels.instance }} esta {{ $value }} bloques detras de la red."
+
+      # Peers: conectividad P2P por debajo del minimo saludable
+      - alert: LowPeerCount
+        expr: p2p_peers < 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Peers por debajo del minimo"
+          description: "El nodo {{ $labels.instance }} tiene solo {{ $value }} peers."
+
+      # Disco: espacio disponible critico para la base de datos del nodo
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"}) < 0.10
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Espacio en disco critico"
+          description: "Menos del 10% de disco disponible en {{ $labels.instance }} ({{ $labels.mountpoint }})."
+
+      # Mempool saturado: acumulacion excesiva de transacciones pendientes
+      - alert: MempoolOverflow
+        expr: txpool_pending > 10000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mempool con acumulacion excesiva"
+          description: "El nodo {{ $labels.instance }} tiene {{ $value }} transacciones pendientes."

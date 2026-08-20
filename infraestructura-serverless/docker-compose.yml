@@ -1,0 +1,22 @@
+services:
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: infra-serverless-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,lambda,iam,logs
+      - DEBUG=0
+      - LAMBDA_EXECUTOR=docker
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "localstack-data:/var/lib/localstack"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  localstack-data:

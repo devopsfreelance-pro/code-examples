@@ -1,0 +1,19 @@
+services:
+  nexus:
+    image: sonatype/nexus3:3.70.1
+    container_name: nexus-demo
+    ports:
+      - "8081:8081"
+    volumes:
+      - nexus-data:/nexus-data
+    environment:
+      - INSTALL4J_ADD_VM_PARAMS=-Xms512m -Xmx512m -XX:MaxDirectMemorySize=512m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/service/rest/v1/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+volumes:
+  nexus-data:

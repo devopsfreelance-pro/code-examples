@@ -1,0 +1,20 @@
+# Pod deliberadamente inseguro: corre como root, privilegiado, sin
+# restricciones. El namespace secure-demo tiene el nivel Pod Security
+# Standard "restricted" en modo enforce, asi que el API server debe
+# RECHAZAR la creacion de este pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: insecure-pod
+  namespace: secure-demo
+spec:
+  containers:
+  - name: app
+    image: nginx:1.27-alpine
+    securityContext:
+      privileged: true
+      allowPrivilegeEscalation: true
+      runAsUser: 0
+      capabilities:
+        add:
+        - ALL

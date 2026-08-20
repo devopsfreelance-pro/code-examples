@@ -1,0 +1,16 @@
+# Service generado automaticamente para el servicio: $service_name
+apiVersion: v1
+kind: Service
+metadata:
+  name: $service_name
+  labels:
+    app: $service_name
+    owner: $owner
+spec:
+  type: ClusterIP
+  selector:
+    app: $service_name
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP

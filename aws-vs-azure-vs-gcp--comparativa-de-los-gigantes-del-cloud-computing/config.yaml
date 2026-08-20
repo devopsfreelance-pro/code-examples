@@ -1,0 +1,36 @@
+# Pesos de cada criterio (deben sumar 1.0) y puntajes 1-10 por proveedor.
+# Basado en la matriz de decision del post del blog.
+criteria_weights:
+  cost: 0.25
+  performance: 0.20
+  ecosystem: 0.15
+  security: 0.15
+  innovation: 0.10
+  support: 0.10
+  compliance: 0.05
+
+providers:
+  AWS:
+    cost: 7
+    performance: 9
+    ecosystem: 10
+    security: 9
+    innovation: 7
+    support: 9
+    compliance: 9
+  Azure:
+    cost: 8
+    performance: 8
+    ecosystem: 8
+    security: 9
+    innovation: 7
+    support: 8
+    compliance: 9
+  GCP:
+    cost: 9
+    performance: 8
+    ecosystem: 6
+    security: 8
+    innovation: 10
+    support: 7
+    compliance: 8

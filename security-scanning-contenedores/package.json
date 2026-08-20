@@ -1,0 +1,12 @@
+{
+  "name": "demo-scan-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App minima con dependencias desactualizadas a proposito, para demostrar container security scanning con Trivy y Grype.",
+  "main": "server.js",
+  "dependencies": {
+    "express": "4.16.4",
+    "lodash": "4.17.15",
+    "minimist": "1.2.0"
+  }
+}

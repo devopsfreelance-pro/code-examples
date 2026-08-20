@@ -1,0 +1,55 @@
+---
+# Deployment con estrategia RollingUpdate (la que usa Kubernetes por defecto).
+# minReadySeconds y readinessProbe hacen el rollout lo bastante lento como
+# para poder observarlo con `kubectl get pods -w` mientras corre.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-rolling
+  labels:
+    app: demo-rolling
+spec:
+  replicas: 6
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  selector:
+    matchLabels:
+      app: demo-rolling
+  template:
+    metadata:
+      labels:
+        app: demo-rolling
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 1
+            periodSeconds: 2
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-rolling
+spec:
+  selector:
+    app: demo-rolling
+  ports:
+    - port: 80
+      targetPort: 80

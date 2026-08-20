@@ -1,0 +1,21 @@
+services:
+  demo-api:
+    build: ./api
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+  k6:
+    image: grafana/k6:latest
+    depends_on:
+      demo-api:
+        condition: service_healthy
+    environment:
+      - BASE_URL=http://demo-api:5000
+    volumes:
+      - ./k6:/scripts
+    command: run /scripts/load-test.js

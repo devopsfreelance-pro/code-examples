@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  # Nodo Ethereum local de desarrollo (Anvil, incluido en Foundry)
+  anvil:
+    image: ghcr.io/foundry-rs/foundry:latest
+    container_name: web3-anvil
+    entrypoint: ["anvil", "--host", "0.0.0.0", "--block-time", "5"]
+    ports:
+      - "8545:8545"
+    networks:
+      - web3-net
+
+  # Exporter Python que consulta el nodo por JSON-RPC y expone metricas Prometheus
+  exporter:
+    build: ./exporter
+    container_name: web3-exporter
+    environment:
+      - RPC_URL=http://anvil:8545
+      - SCRAPE_INTERVAL=5
+    depends_on:
+      - anvil
+    ports:
+      - "9100:9100"
+    networks:
+      - web3-net
+
+  # Prometheus scrapea las metricas del exporter
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: web3-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - exporter
+    networks:
+      - web3-net
+
+networks:
+  web3-net:
+    driver: bridge

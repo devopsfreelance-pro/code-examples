@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  geth:
+    image: ethereum/client-go:v1.14.11
+    container_name: geth-dev
+    command:
+      - --dev
+      - --http
+      - --http.addr=0.0.0.0
+      - --http.api=eth,net,web3
+      - --cache=512
+      - --maxpeers=50
+      - --db.engine=pebble
+      - --metrics
+      - --metrics.addr=0.0.0.0
+      - --metrics.port=6060
+      - --verbosity=3
+    ports:
+      - "8545:8545"   # RPC (solo para pruebas locales, nunca exponer así a Internet)
+      - "6060:6060"   # Metricas Prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8545 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: prometheus-eth
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      geth:
+        condition: service_healthy

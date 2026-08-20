@@ -1,0 +1,30 @@
+groups:
+  - name: on-call-demo-alerts
+    rules:
+      # Simula un incidente critico (ej: servicio caido) que debe
+      # despertar a la persona de guardia -> ruteado a "pagerduty-critical".
+      - alert: SyntheticCriticalIncident
+        expr: vector(1) == 1
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Incidente critico simulado"
+          description: >
+            Alerta de demostracion que siempre dispara para mostrar el
+            ruteo por severidad hacia el receiver critico (equivalente a
+            PagerDuty en produccion).
+
+      # Simula una alerta de bajo impacto (ej: uso de CPU elevado, no
+      # accionable de inmediato) -> ruteada a "slack-warnings", sin pager.
+      - alert: SyntheticWarningNoise
+        expr: rate(prometheus_tsdb_head_samples_appended_total[5m]) >= 0
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alerta de advertencia simulada"
+          description: >
+            Alerta de demostracion de baja severidad, para mostrar como
+            se separa del canal critico y evita interrumpir a la persona
+            de guardia (reduccion de ruido de alertas).

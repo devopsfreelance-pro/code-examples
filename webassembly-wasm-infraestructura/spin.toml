@@ -1,0 +1,19 @@
+spin_manifest_version = 2
+
+[application]
+name = "wasm-infra-demo"
+version = "0.1.0"
+authors = ["DevOps Freelance Pro"]
+description = "Servicio HTTP minimo compilado a WebAssembly y servido con Spin (Fermyon)"
+
+[[trigger.http]]
+route = "/..."
+component = "wasm-infra-demo"
+
+[component.wasm-infra-demo]
+source = "target/wasm32-wasip1/release/wasm_infra_demo.wasm"
+allowed_outbound_hosts = []
+
+[component.wasm-infra-demo.build]
+command = "cargo build --target wasm32-wasip1 --release"
+watch = ["src/**/*.rs", "Cargo.toml"]

@@ -1,0 +1,34 @@
+stages:
+  - build
+  - test
+  - integration_test
+  - deploy
+
+variables:
+  APP_NAME: "demo-app"
+
+build:
+  stage: build
+  script:
+    - echo "Compilando ${APP_NAME}..."
+    - mkdir -p dist
+    - echo "print('hello from ${APP_NAME}')" > dist/app.py
+    - python3 -m py_compile dist/app.py
+
+test:
+  stage: test
+  script:
+    - echo "Ejecutando tests unitarios..."
+    - python3 -c "assert 1 + 1 == 2, 'math is broken'; print('tests unitarios OK')"
+
+integration_test:
+  stage: integration_test
+  script:
+    - bash integration_test.sh
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Desplegando ${APP_NAME}..."
+    - echo "Deploy simulado completo"
+  when: manual

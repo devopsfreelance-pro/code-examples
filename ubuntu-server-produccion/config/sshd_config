@@ -1,0 +1,16 @@
+# sshd_config endurecido - ejemplo del post "Ubuntu Server para producción"
+# https://www.devopsfreelance.pro/blog/posts/ubuntu-server-produccion/
+
+Port 2222
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+AllowUsers deploy
+MaxAuthTries 3
+ClientAliveInterval 300
+ClientAliveCountMax 2
+
+UsePAM yes
+Subsystem sftp /usr/lib/openssh/sftp-server
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: frontend
+  labels:
+    zone: frontend
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backend
+  labels:
+    zone: backend
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: database
+  labels:
+    zone: database

@@ -1,0 +1,66 @@
+---
+# Headless Service: da identidad de red estable a cada pod
+# (pod-0.web-headless, pod-1.web-headless, ...)
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-headless
+  labels:
+    app: web
+spec:
+  clusterIP: None
+  selector:
+    app: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+# StatefulSet: 3 réplicas, cada una con su propio PVC persistente
+# creado a partir de volumeClaimTemplates.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web
+spec:
+  serviceName: web-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: web
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/nginx/html
+          lifecycle:
+            postStart:
+              exec:
+                # Cada pod escribe su propio identity file la primera vez
+                # que arranca, para demostrar que el dato persiste en el
+                # PVC aunque el pod se borre y Kubernetes lo recree.
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    if [ ! -f /usr/share/nginx/html/index.html ]; then
+                      echo "Hola desde $(hostname), primer arranque: $(date)" > /usr/share/nginx/html/index.html
+                    fi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 100Mi

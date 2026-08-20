@@ -1,0 +1,110 @@
+---
+# Blue-Green Deployment: dos Deployments identicos (blue y green) sirviendo
+# contenido distinto para poder identificarlos, y un unico Service cuyo
+# selector se apunta a uno u otro. El switch de trafico es instantaneo:
+# es solo un patch del selector del Service (ver scripts/switch-blue-green.sh).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blue-html
+data:
+  index.html: |
+    <html><body><h1>BLUE - version estable (v1)</h1></body></html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: green-html
+data:
+  index.html: |
+    <html><body><h1>GREEN - version nueva (v2)</h1></body></html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-blue
+  labels:
+    app: demo-bluegreen
+    version: blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: demo-bluegreen
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: demo-bluegreen
+        version: blue
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+      volumes:
+        - name: html
+          configMap:
+            name: blue-html
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-green
+  labels:
+    app: demo-bluegreen
+    version: green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: demo-bluegreen
+      version: green
+  template:
+    metadata:
+      labels:
+        app: demo-bluegreen
+        version: green
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+      volumes:
+        - name: html
+          configMap:
+            name: green-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-bluegreen
+spec:
+  selector:
+    app: demo-bluegreen
+    version: blue
+  ports:
+    - port: 80
+      targetPort: 80

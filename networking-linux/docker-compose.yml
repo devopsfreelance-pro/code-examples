@@ -1,0 +1,12 @@
+services:
+  netns-lab:
+    build: .
+    container_name: netns-lab
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_ADMIN
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    tty: true

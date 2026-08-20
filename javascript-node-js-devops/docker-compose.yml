@@ -1,0 +1,11 @@
+services:
+  app:
+    image: nginx:1.27-alpine
+    container_name: nodejs-devops-demo-app
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5

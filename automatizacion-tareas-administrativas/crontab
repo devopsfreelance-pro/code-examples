@@ -1,0 +1,7 @@
+# Cron job de admin automation: limpieza de logs antiguos.
+#
+# En este demo corre cada minuto para que se vea en segundos.
+# En producción sería, por ejemplo, una vez por día:
+#   0 2 * * * /opt/scripts/cleanup-logs.sh >> /var/log/cleanup-cron.log 2>&1
+*/1 * * * * root /opt/scripts/cleanup-logs.sh >> /var/log/cleanup-cron.log 2>&1
+

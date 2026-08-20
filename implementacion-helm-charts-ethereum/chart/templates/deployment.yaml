@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-node
+  labels:
+    app: {{ .Release.Name }}-node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-node
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-node
+    spec:
+      containers:
+        - name: eth-node
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # Simula un endpoint JSON-RPC respondiendo con la red y el
+          # syncMode configurados, tal como haría un nodo geth/besu real
+          # con --http --http.port {{ .Values.service.rpcPort }}.
+          args:
+            - "-listen=:{{ .Values.service.rpcPort }}"
+            - "-text=network={{ .Values.network }} syncMode={{ .Values.syncMode }}"
+          ports:
+            - name: rpc
+              containerPort: {{ .Values.service.rpcPort }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: chaindata
+              mountPath: /data
+      volumes:
+        - name: chaindata
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-chaindata
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+---
+{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Release.Name }}-chaindata
+spec:
+  accessModes:
+    - {{ .Values.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+  {{- if .Values.persistence.storageClass }}
+  storageClassName: {{ .Values.persistence.storageClass }}
+  {{- end }}
+{{- end }}

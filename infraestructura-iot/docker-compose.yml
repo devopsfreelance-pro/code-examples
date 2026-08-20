@@ -1,0 +1,49 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0.18
+    container_name: iot-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -i healthcheck -W 3 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  sensor-simulator:
+    build: .
+    container_name: iot-sensor-simulator
+    command: ["python", "sensor_simulator.py"]
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_PORT: "1883"
+      PUBLISH_INTERVAL_SECONDS: "3"
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+
+  edge-processor:
+    build: .
+    container_name: iot-edge-processor
+    command: ["python", "edge_processor.py"]
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_PORT: "1883"
+      TEMPERATURE_THRESHOLD: "30"
+      SUMMARY_INTERVAL_SECONDS: "20"
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+
+  cloud-monitor:
+    build: .
+    container_name: iot-cloud-monitor
+    command: ["python", "cloud_monitor.py"]
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_PORT: "1883"
+    depends_on:
+      mosquitto:
+        condition: service_healthy

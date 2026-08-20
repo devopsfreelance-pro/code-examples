@@ -1,0 +1,55 @@
+services:
+  traefik:
+    image: traefik:v3.7
+    container_name: traefik-demo
+    command:
+      # Entrypoints (puertos donde Traefik escucha)
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.traefik.address=:8899"
+      # Provider Docker: descubrimiento automático via labels
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # Dashboard habilitado, pero NO en modo inseguro (--api.insecure)
+      - "--api.dashboard=true"
+      - "--api=true"
+      # Logs por consola, útiles para ver el enrutamiento en vivo
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    ports:
+      - "80:80"
+      - "8899:8899"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      # Router del propio dashboard, protegido con basicAuth
+      # y expuesto solo en el entrypoint "traefik" (puerto 8080), no en "web".
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`dashboard.localhost`)"
+      - "traefik.http.routers.dashboard.entrypoints=traefik"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      # Usuario: admin / Password: admin123 (hash apr1, generado con
+      # `openssl passwd -apr1 admin123`). Cambiá esto si lo usás fuera del demo.
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$t0xuNy5R$$i3kuNx0zhOOdbhw8rhx.M0"
+
+  # Servicio A: se descubre automáticamente por sus labels, sin tocar
+  # ningún archivo de configuración de Traefik.
+  whoami-a:
+    image: traefik/whoami:v1.10
+    container_name: whoami-a
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami-a.rule=Host(`a.localhost`)"
+      - "traefik.http.routers.whoami-a.entrypoints=web"
+      - "traefik.http.services.whoami-a.loadbalancer.server.port=80"
+
+  # Servicio B: mismo patrón, subdominio distinto. Simula el caso del post
+  # de "frontend.localhost / api.localhost" con etiquetas simples.
+  whoami-b:
+    image: traefik/whoami:v1.10
+    container_name: whoami-b
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami-b.rule=Host(`b.localhost`)"
+      - "traefik.http.routers.whoami-b.entrypoints=web"
+      - "traefik.http.services.whoami-b.loadbalancer.server.port=80"

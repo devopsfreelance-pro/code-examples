@@ -1,0 +1,6 @@
+services:
+  admin-automation:
+    build: .
+    container_name: admin-automation-demo
+    volumes:
+      - ./output:/var/log

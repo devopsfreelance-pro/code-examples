@@ -1,0 +1,72 @@
+# StatefulSet de un nodo Ethereum (geth) para demo local en kind.
+# Usa --dev (chain efimera, minado instantaneo) para no depender de la red
+# real ni de horas de sincronizacion: el objetivo es mostrar el patron de
+# despliegue (identidad estable, almacenamiento persistente, probes,
+# limites de recursos), no correr un nodo mainnet.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: geth-node
+  namespace: ethereum
+  labels:
+    app: geth-node
+spec:
+  serviceName: geth-node
+  replicas: 1
+  selector:
+    matchLabels:
+      app: geth-node
+  template:
+    metadata:
+      labels:
+        app: geth-node
+    spec:
+      containers:
+        - name: geth
+          image: ethereum/client-go:v1.14.11
+          args:
+            - --dev
+            - --dev.period=2
+            - --http
+            - --http.addr=0.0.0.0
+            - --http.port=8545
+            - --http.api=eth,net,web3
+            - --http.corsdomain=*
+            - --http.vhosts=*
+            - --datadir=/data
+          ports:
+            - name: rpc
+              containerPort: 8545
+            - name: p2p
+              containerPort: 30303
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: rpc
+            # geth responde 200 a GET / en el puerto HTTP-RPC en cuanto
+            # el servidor esta arriba; suficiente para esta demo.
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: rpc
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: chaindata
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: chaindata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

@@ -1,0 +1,28 @@
+# Ingress generado automaticamente para el servicio: $service_name
+# TLS automatico via cert-manager (ClusterIssuer letsencrypt-prod asumido).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: $service_name
+  labels:
+    app: $service_name
+    owner: $owner
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - $service_name.example.com
+      secretName: $service_name-tls
+  rules:
+    - host: $service_name.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: $service_name
+                port:
+                  number: 80

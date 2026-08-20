@@ -1,0 +1,16 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: user-service
+  description: Servicio de gestion de usuarios y autenticacion
+  annotations:
+    github.com/project-slug: empresa/user-service
+spec:
+  type: service
+  lifecycle: production
+  owner: team-identity
+  system: e-commerce
+  dependsOn:
+    - resource:default/user-database
+  providesApis:
+    - user-api

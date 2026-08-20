@@ -1,0 +1,38 @@
+services:
+  blue:
+    build:
+      context: .
+      args:
+        APP_VERSION: v1
+        DEPLOYMENT_COLOR: blue
+    container_name: webapp-blue
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  # "green" no arranca con docker compose up: la levanta deploy-blue-green.sh
+  # cuando hay una nueva golden image que desplegar, igual que en el post
+  # (se construye Green al lado de Blue, se prueba, y recien despues se
+  # mueve el trafico).
+  green:
+    build:
+      context: .
+      args:
+        APP_VERSION: v2
+        DEPLOYMENT_COLOR: green
+    container_name: webapp-green
+    expose:
+      - "8080"
+    restart: unless-stopped
+    profiles:
+      - green
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: webapp-lb
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - blue

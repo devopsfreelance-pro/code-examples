@@ -1,0 +1,16 @@
+{
+  "description": "Distribucion de mercado de ejemplo (aproximada, basada en el tipo de datos que publica clientdiversity.org). Reemplazar con datos reales antes de usar en produccion.",
+  "execution_layer": {
+    "geth": 44.2,
+    "nethermind": 29.8,
+    "besu": 13.5,
+    "erigon": 12.5
+  },
+  "consensus_layer": {
+    "prysm": 38.0,
+    "lighthouse": 27.5,
+    "teku": 15.0,
+    "nimbus": 10.5,
+    "lodestar": 9.0
+  }
+}

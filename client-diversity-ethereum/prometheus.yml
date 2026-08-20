@@ -1,0 +1,17 @@
+# prometheus.yml
+#
+# Config minima para scrapear el exporter de ejemplo (diversity_exporter.py)
+# y cargar las reglas de alerta de prometheus_alerts.yml.
+# Requiere que el exporter corra en el host, puerto 9877 (ver README.md).
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - prometheus_alerts.yml
+
+scrape_configs:
+  - job_name: 'client-diversity'
+    static_configs:
+      - targets: ['diversity-exporter:9877']

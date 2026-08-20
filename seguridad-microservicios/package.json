@@ -1,0 +1,15 @@
+{
+  "name": "seguridad-microservicios-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo de autenticacion JWT zero-trust entre API Gateway y microservicio backend",
+  "main": "gateway.js",
+  "scripts": {
+    "gateway": "node gateway.js",
+    "backend": "node backend-service.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

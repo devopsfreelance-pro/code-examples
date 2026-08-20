@@ -1,0 +1,13 @@
+# SLOs del servicio payment-api, definidos por el equipo owner (Team Payments).
+# Mismo formato que el usado en el post del blog.
+service: payment-api
+owner_team: Team Payments
+window_days: 30
+slos:
+  - name: Availability
+    sli: "successful_responses / total_responses"
+    target_pct: 99.95
+
+  - name: Latency
+    sli: "responses_under_200ms / total_responses"
+    target_pct: 99.0

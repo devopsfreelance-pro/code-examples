@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  model-v1:
+    build: .
+    command: ["python", "model_service.py"]
+    environment:
+      MODEL_VERSION: "v1"
+      MODEL_ACCURACY: "0.85"
+    ports:
+      - "5001:5000"
+
+  model-v2:
+    build: .
+    command: ["python", "model_service.py"]
+    environment:
+      MODEL_VERSION: "v2"
+      MODEL_ACCURACY: "0.93"
+    ports:
+      - "5002:5000"
+
+  router:
+    build: .
+    command: ["python", "router.py"]
+    environment:
+      MODEL_V1_URL: "http://model-v1:5000"
+      MODEL_V2_URL: "http://model-v2:5000"
+      CANARY_WEIGHT: "10"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - model-v1
+      - model-v2

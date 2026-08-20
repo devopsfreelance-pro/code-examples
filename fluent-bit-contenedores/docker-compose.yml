@@ -1,0 +1,43 @@
+services:
+  # Genera logs JSON simulando una app en contenedor, uno por linea,
+  # igual al formato que produce el driver json-file de Docker/containerd.
+  app-log-generator:
+    image: alpine:3.20
+    container_name: app-log-generator
+    command:
+      - sh
+      - -c
+      - |
+        i=0
+        while true; do
+          i=$$((i+1))
+          ts=$$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          if [ $$((i % 5)) -eq 0 ]; then
+            level="error"
+            msg="fallo al conectar con la base de datos"
+          else
+            level="info"
+            msg="request procesado correctamente"
+          fi
+          echo "{\"time\":\"$$ts\",\"level\":\"$$level\",\"message\":\"$$msg\",\"request_id\":\"req-$$i\"}" >> /var/log/app/app.log
+          sleep 1
+        done
+    volumes:
+      - app-logs:/var/log/app
+
+  fluent-bit:
+    image: cr.fluentbit.io/fluent/fluent-bit:3.1
+    container_name: fluent-bit
+    depends_on:
+      - app-log-generator
+    volumes:
+      - app-logs:/var/log/app:ro
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - ./parsers.conf:/fluent-bit/etc/parsers.conf:ro
+      - ./logs-out:/output
+    ports:
+      - "2020:2020"
+    command: ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf"]
+
+volumes:
+  app-logs:

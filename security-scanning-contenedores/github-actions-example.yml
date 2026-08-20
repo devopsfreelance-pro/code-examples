@@ -1,0 +1,28 @@
+# Referencia de como se veria este mismo escaneo integrado en un pipeline
+# CI/CD con GitHub Actions (no se ejecuta localmente, es solo para consulta).
+# Copiar a .github/workflows/container-security-scan.yml en un repo real.
+name: container-security-scan
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -f Dockerfile.vulnerable -t myapp:${{ github.sha }} .
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'myapp:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          trivyignores: '.trivyignore'

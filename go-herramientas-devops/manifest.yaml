@@ -1,0 +1,11 @@
+app: checkout-service
+environment: staging
+replicas: 3
+image: registry.example.com/checkout-service:1.4.0
+ports:
+  - 8080
+  - 9100
+tags:
+  - go
+  - devops
+  - checkout

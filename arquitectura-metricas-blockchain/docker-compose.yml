@@ -1,0 +1,24 @@
+services:
+  mock-exporter:
+    build: ./mock-exporter
+    ports:
+      - "8000:8000"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/recording_rules.yml:/etc/prometheus/recording_rules.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    depends_on:
+      - mock-exporter
+      - victoriametrics
+
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:latest
+    ports:
+      - "8428:8428"

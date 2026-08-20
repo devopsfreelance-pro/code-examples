@@ -1,0 +1,30 @@
+#!/bin/bash
+# post-receive: se ejecuta en el repo bare (simula el "servidor") despues de
+# aceptar un push. Basado en el ejemplo de "Post-Receive Hooks para
+# Automatizacion del Servidor" del post: hace checkout a un work-tree de
+# "produccion" y corre un script de deploy simulado.
+
+set -e
+
+PROD_DIR="${DEMO_PROD_DIR:?la variable DEMO_PROD_DIR debe estar seteada}"
+
+while read -r oldrev newrev refname; do
+    branch=$(git rev-parse --symbolic --abbrev-ref "$refname")
+
+    if [ "$branch" = "main" ]; then
+        echo "Desplegando cambios a produccion (rama: $branch)..."
+
+        GIT_DIR_ABS="$(pwd)"
+        mkdir -p "$PROD_DIR"
+        git --work-tree="$PROD_DIR" --git-dir="$GIT_DIR_ABS" checkout -f main
+
+        if [ -x "$PROD_DIR/deploy.sh" ]; then
+            short_rev=$(git --git-dir="$GIT_DIR_ABS" rev-parse --short "$newrev")
+            (cd "$PROD_DIR" && GIT_COMMIT="$short_rev" ./deploy.sh)
+        fi
+
+        echo "Despliegue completado exitosamente"
+    else
+        echo "Push a rama '$branch' recibido, no se despliega (solo main dispara deploy)"
+    fi
+done

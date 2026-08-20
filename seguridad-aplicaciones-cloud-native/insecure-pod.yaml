@@ -1,0 +1,14 @@
+# Pod INSEGURO: sin securityContext, corre como root, sin restricciones.
+# En el namespace "secure-demo" (perfil restricted) el API server debe
+# RECHAZAR la creación de este Pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: insecure-app
+  namespace: secure-demo
+spec:
+  containers:
+    - name: app
+      image: nginx:1.27-alpine
+      ports:
+        - containerPort: 80

@@ -1,0 +1,63 @@
+version: "3.8"
+
+services:
+  postgres-primary:
+    image: bitnami/postgresql:16
+    container_name: pg-primary
+    environment:
+      POSTGRESQL_REPLICATION_MODE: master
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: repl_pass
+      POSTGRESQL_USERNAME: appuser
+      POSTGRESQL_PASSWORD: apppass
+      POSTGRESQL_DATABASE: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - primary_data:/bitnami/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "appuser", "-d", "appdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres-replica:
+    image: bitnami/postgresql:16
+    container_name: pg-replica
+    environment:
+      POSTGRESQL_REPLICATION_MODE: slave
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: repl_pass
+      POSTGRESQL_MASTER_HOST: postgres-primary
+      POSTGRESQL_MASTER_PORT_NUMBER: 5432
+      POSTGRESQL_PASSWORD: apppass
+    ports:
+      - "5433:5432"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    volumes:
+      - replica_data:/bitnami/postgresql
+
+  pgbouncer:
+    image: edoburu/pgbouncer:1.21.0
+    container_name: pgbouncer
+    environment:
+      DATABASE_HOST: postgres-primary
+      DATABASE_PORT: 5432
+      DATABASE_USER: appuser
+      DATABASE_PASSWORD: apppass
+      DATABASE_NAME: appdb
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 100
+      DEFAULT_POOL_SIZE: 20
+      AUTH_TYPE: scram-sha-256
+    ports:
+      - "6432:5432"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+
+volumes:
+  primary_data:
+  replica_data:

@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  # Backend de ejemplo al que Kong hace de proxy (httpbin: eco de peticiones HTTP)
+  httpbin:
+    image: kennethreitz/httpbin:latest
+    container_name: kong-demo-httpbin
+    networks:
+      - kong-demo
+
+  # Kong en modo DB-less: la configuracion se lee de kong.yml (declarativo),
+  # sin Postgres/Cassandra. Es el modo recomendado en el post para Kubernetes/GitOps.
+  kong:
+    image: kong:3.6
+    container_name: kong-demo-gateway
+    depends_on:
+      - httpbin
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    volumes:
+      - ./kong.yml:/kong/declarative/kong.yml:ro
+    ports:
+      - "8000:8000" # Proxy (trafico de API)
+      - "8001:8001" # Admin API
+    networks:
+      - kong-demo
+
+networks:
+  kong-demo:
+    driver: bridge

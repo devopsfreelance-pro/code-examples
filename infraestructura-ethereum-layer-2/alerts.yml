@@ -1,0 +1,26 @@
+groups:
+  - name: l2-node-alerts
+    rules:
+      - alert: L2SyncLag
+        expr: l2_unsafe_head - l2_safe_head > 100
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Nodo L2 con lag de sincronizacion"
+
+      - alert: L2BatchSubmissionDelay
+        expr: time() - l2_last_batch_submission_timestamp > 3600
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Retraso en submission de batch a L1"
+
+      - alert: L2PeerCount
+        expr: l2_p2p_peer_count < 3
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pocos peers conectados en nodo L2"

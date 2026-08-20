@@ -1,0 +1,8 @@
+services:
+  app:
+    build: ./app
+    container_name: troubleshooting-demo-app
+    # mem_limit fuerza que el memory leak sea visible en pocos minutos
+    # en vez de tardar horas, para que el ejemplo sea observable rapido.
+    mem_limit: 150m
+    restart: unless-stopped

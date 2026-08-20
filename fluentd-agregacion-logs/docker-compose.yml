@@ -1,0 +1,10 @@
+services:
+  fluentd:
+    image: fluent/fluentd:v1.16-1
+    user: root
+    ports:
+      - "9880:9880"
+    volumes:
+      - ./conf/fluentd.conf:/fluentd/etc/fluent.conf:ro
+      - ./log-out:/fluentd/log
+    command: ["fluentd", "-c", "/fluentd/etc/fluent.conf", "-v"]

@@ -1,0 +1,17 @@
+services:
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: aws-api-gateway-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=apigateway,lambda,iam,logs,sts
+      - DEBUG=0
+      - LAMBDA_EXECUTOR=local
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20

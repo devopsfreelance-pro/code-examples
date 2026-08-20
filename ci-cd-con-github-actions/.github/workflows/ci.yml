@@ -1,0 +1,52 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ci-cd-con-github-actions/app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build Docker image
+        working-directory: ci-cd-con-github-actions
+        run: docker build -t ci-cd-github-actions-demo:${{ github.sha }} .
+
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        working-directory: ci-cd-con-github-actions
+        run: docker build -t ci-cd-github-actions-demo:${{ github.sha }} .
+
+      - name: Deploy (simulado con un contenedor local)
+        run: |
+          docker run -d --name demo-deploy -p 8080:8080 \
+            -e APP_ENVIRONMENT=production ci-cd-github-actions-demo:${{ github.sha }}
+          sleep 2
+
+      - name: Smoke test
+        run: curl -f http://localhost:8080/health
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f demo-deploy || true

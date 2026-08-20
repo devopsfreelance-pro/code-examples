@@ -1,0 +1,14 @@
+services:
+  web01:
+    image: ubuntu:22.04
+    container_name: web01
+    command: sleep infinity
+    ports:
+      - "8080:80"
+
+  web02:
+    image: ubuntu:22.04
+    container_name: web02
+    command: sleep infinity
+    ports:
+      - "8081:80"

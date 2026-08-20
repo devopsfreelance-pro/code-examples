@@ -1,0 +1,13 @@
+services:
+  contenedor-limitado:
+    build: .
+    image: virtualizacion-demo:local
+    container_name: virtualizacion-demo
+    ports:
+      - "8080:8080"
+    # Estos limites son exactamente lo que el post describe como
+    # "cgroups para limitar recursos": Docker se los pasa al kernel
+    # y el kernel los aplica al proceso del contenedor, no a una VM.
+    cpus: "0.5"
+    mem_limit: "128m"
+    restart: unless-stopped

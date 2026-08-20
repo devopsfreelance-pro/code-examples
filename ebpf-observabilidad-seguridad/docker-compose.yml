@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  falco:
+    # Falco usa eBPF (motor "modern_ebpf") para enganchar syscalls del kernel
+    # y detectar comportamiento anomalo en tiempo real, sin agentes en userspace.
+    image: falcosecurity/falco-no-driver:0.40.0
+    container_name: falco-ebpf-demo
+    privileged: true
+    pid: host
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /etc:/host/etc:ro
+      - /sys/kernel/debug:/sys/kernel/debug:rw
+      - /sys/fs/bpf:/sys/fs/bpf:rw
+    command:
+      - /usr/bin/falco
+      - --modern-bpf
+      - -o
+      - engine.kind=modern_ebpf
+      - -o
+      - json_output=true

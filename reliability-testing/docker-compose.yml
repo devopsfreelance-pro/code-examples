@@ -1,0 +1,11 @@
+services:
+  target-service:
+    build: .
+    container_name: reliability-target
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 3

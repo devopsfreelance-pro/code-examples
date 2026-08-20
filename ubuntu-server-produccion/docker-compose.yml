@@ -1,0 +1,6 @@
+services:
+  ubuntu-hardened:
+    build: .
+    container_name: ubuntu-hardened-demo
+    ports:
+      - "2222:2222"

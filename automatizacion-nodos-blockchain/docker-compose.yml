@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+  execution-healthy:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./mock_node_server.py:/app/mock_node_server.py:ro
+    environment:
+      MODE: execution
+      PEERS: "8"
+      SYNCING: "false"
+      PORT: "8545"
+    command: ["python", "/app/mock_node_server.py"]
+
+  consensus-healthy:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./mock_node_server.py:/app/mock_node_server.py:ro
+    environment:
+      MODE: consensus
+      SYNCING: "false"
+      HEALTH_CODE: "200"
+      PORT: "5052"
+    command: ["python", "/app/mock_node_server.py"]
+
+  execution-degraded:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./mock_node_server.py:/app/mock_node_server.py:ro
+    environment:
+      MODE: execution
+      PEERS: "1"
+      SYNCING: "false"
+      PORT: "8545"
+    command: ["python", "/app/mock_node_server.py"]
+
+  consensus-degraded:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./mock_node_server.py:/app/mock_node_server.py:ro
+    environment:
+      MODE: consensus
+      SYNCING: "true"
+      HEALTH_CODE: "503"
+      PORT: "5052"
+    command: ["python", "/app/mock_node_server.py"]
+
+  monitor:
+    image: alpine:3.20
+    depends_on:
+      - execution-healthy
+      - consensus-healthy
+      - execution-degraded
+      - consensus-degraded
+    volumes:
+      - ./health-check.sh:/scripts/health-check.sh:ro
+      - ./auto-prune-demo.sh:/scripts/auto-prune-demo.sh:ro
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        apk add --no-cache bash curl jq >/dev/null
+        sleep 2
+
+        echo "=== Health check: nodo healthy ==="
+        EXEC_RPC=http://execution-healthy:8545 BEACON_API=http://consensus-healthy:5052 \
+          bash /scripts/health-check.sh healthy
+
+        echo
+        echo "=== Health check: nodo degraded (peers insuficientes + beacon no saludable) ==="
+        EXEC_RPC=http://execution-degraded:8545 BEACON_API=http://consensus-degraded:5052 \
+          bash /scripts/health-check.sh degraded || true
+
+        echo
+        echo "=== Demo de auto-pruning por umbral de disco ==="
+        mkdir -p /scripts/demo-data
+        rm -f /scripts/demo-data/*.dat
+        for i in 1 2 3 4 5; do
+          dd if=/dev/zero of=/scripts/demo-data/file$${i}.dat bs=1M count=3 status=none
+        done
+        bash /scripts/auto-prune-demo.sh /scripts/demo-data 10 80

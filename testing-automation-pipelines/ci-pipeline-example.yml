@@ -1,0 +1,56 @@
+# Ejemplo ilustrativo de cómo se vería este mismo testing pipeline en
+# GitHub Actions (.github/workflows/ci.yml en un repo real). No se ejecuta
+# como parte de este repo: se incluye como referencia de cómo trasladar
+# run_pipeline.sh a un pipeline CI/CD real, con las mismas tres etapas y
+# el mismo principio de fail-fast (cada job depende del anterior).
+name: testing-pipeline
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m pyflakes app.py test_unit.py test_integration.py
+
+  unit-tests:
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m pytest test_unit.py -v
+
+  integration-tests:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m pytest test_integration.py -v
+        env:
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379

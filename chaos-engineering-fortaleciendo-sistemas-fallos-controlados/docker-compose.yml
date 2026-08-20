@@ -1,0 +1,45 @@
+services:
+  payment-1:
+    image: python:3.12-alpine
+    container_name: payment-1
+    working_dir: /app
+    volumes:
+      - ./app:/app:ro
+    command: python app.py
+    environment:
+      - PORT=8000
+    ports:
+      - "8081:8000"
+    labels:
+      - "chaos.target=payment-service"
+    restart: unless-stopped
+
+  payment-2:
+    image: python:3.12-alpine
+    container_name: payment-2
+    working_dir: /app
+    volumes:
+      - ./app:/app:ro
+    command: python app.py
+    environment:
+      - PORT=8000
+    ports:
+      - "8082:8000"
+    labels:
+      - "chaos.target=payment-service"
+    restart: unless-stopped
+
+  payment-3:
+    image: python:3.12-alpine
+    container_name: payment-3
+    working_dir: /app
+    volumes:
+      - ./app:/app:ro
+    command: python app.py
+    environment:
+      - PORT=8000
+    ports:
+      - "8083:8000"
+    labels:
+      - "chaos.target=payment-service"
+    restart: unless-stopped

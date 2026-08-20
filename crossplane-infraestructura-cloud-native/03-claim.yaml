@@ -1,0 +1,13 @@
+---
+# Claim
+# Esto es lo que pediria un desarrollador de aplicaciones: una "AppDatabase",
+# sin conocer que hay detras (ConfigMap + Secret en este demo, RDS en produccion).
+apiVersion: example.org/v1alpha1
+kind: AppDatabase
+metadata:
+  name: demo-app-db
+  namespace: default
+spec:
+  parameters:
+    engine: postgres
+    size: small

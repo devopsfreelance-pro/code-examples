@@ -1,0 +1,9 @@
+services:
+  incident-responder:
+    build: ./app
+    container_name: incident-responder
+    ports:
+      - "5000:5000"
+    environment:
+      - DRY_RUN=false
+      - MAX_ACTIONS_PER_HOUR=3

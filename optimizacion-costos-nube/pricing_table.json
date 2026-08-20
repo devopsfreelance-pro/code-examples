@@ -1,0 +1,22 @@
+{
+  "_comment": "Precios hora en USD, region us-east-1, orden de tamano ascendente por familia. Valores de referencia (no oficiales, para el ejemplo).",
+  "size_ladder": {
+    "t3": ["t3.medium", "t3.large", "t3.xlarge", "t3.2xlarge"],
+    "c5": ["c5.large", "c5.xlarge", "c5.2xlarge", "c5.4xlarge"],
+    "m5": ["m5.large", "m5.xlarge", "m5.2xlarge", "m5.4xlarge"]
+  },
+  "instances": {
+    "t3.medium":  {"on_demand": 0.0416, "reserved_1yr": 0.0262, "spot_avg": 0.0125},
+    "t3.large":   {"on_demand": 0.0832, "reserved_1yr": 0.0525, "spot_avg": 0.0250},
+    "t3.xlarge":  {"on_demand": 0.1664, "reserved_1yr": 0.1050, "spot_avg": 0.0499},
+    "t3.2xlarge": {"on_demand": 0.3328, "reserved_1yr": 0.2100, "spot_avg": 0.0998},
+    "c5.large":   {"on_demand": 0.0850, "reserved_1yr": 0.0536, "spot_avg": 0.0340},
+    "c5.xlarge":  {"on_demand": 0.1700, "reserved_1yr": 0.1071, "spot_avg": 0.0680},
+    "c5.2xlarge": {"on_demand": 0.3400, "reserved_1yr": 0.2142, "spot_avg": 0.1360},
+    "c5.4xlarge": {"on_demand": 0.6800, "reserved_1yr": 0.4284, "spot_avg": 0.2720},
+    "m5.large":   {"on_demand": 0.0960, "reserved_1yr": 0.0605, "spot_avg": 0.0384},
+    "m5.xlarge":  {"on_demand": 0.1920, "reserved_1yr": 0.1210, "spot_avg": 0.0768},
+    "m5.2xlarge": {"on_demand": 0.3840, "reserved_1yr": 0.2420, "spot_avg": 0.1536},
+    "m5.4xlarge": {"on_demand": 0.7680, "reserved_1yr": 0.4840, "spot_avg": 0.3072}
+  }
+}

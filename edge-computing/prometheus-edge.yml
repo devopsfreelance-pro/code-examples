@@ -1,0 +1,15 @@
+## Prometheus del nodo edge: scrapea el exporter local del sensor
+## y expone /federate para que el Prometheus central lo consulte.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  external_labels:
+    cluster: "edge-line-manufacturing"
+    region: "planta-01"
+
+scrape_configs:
+  - job_name: "edge-sensors"
+    static_configs:
+      - targets: ["sensor-exporter:9100"]
+        labels:
+          node_role: "edge-gateway"

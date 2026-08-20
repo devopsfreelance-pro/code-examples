@@ -1,0 +1,36 @@
+#!/bin/bash
+# hooks/pre-commit
+#
+# Ejemplo de validaciones pre-commit para un equipo DevOps:
+# - Bloquea credenciales hardcodeadas en el diff staged.
+# - Bloquea archivos de más de 1MB (para forzar el uso de Git LFS en vez
+#   de meter binarios pesados directo al historial).
+#
+# Instalación: cp hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -euo pipefail
+
+echo "Ejecutando validaciones pre-commit..."
+
+# 1) Verificar que no hay credenciales hardcodeadas en el diff staged
+if git diff --cached | grep -iE '^\+.*(password|api_key|secret|token)\s*=\s*["\047][^"\047]+["\047]'; then
+    echo "ERROR: posibles credenciales detectadas en el código staged"
+    echo "Revisa el diff de arriba. Si es un falso positivo, ajusta el patrón del hook."
+    exit 1
+fi
+
+# 2) Bloquear archivos grandes que deberían ir por Git LFS
+MAX_BYTES=1048576 # 1 MB
+for f in $(git diff --cached --name-only --diff-filter=ACM); do
+    if [ -f "$f" ]; then
+        size=$(stat -c%s "$f" 2>/dev/null || stat -f%z "$f")
+        if [ "$size" -gt "$MAX_BYTES" ]; then
+            echo "ERROR: '$f' pesa $((size / 1024))KB (> 1MB)"
+            echo "Usa Git LFS para archivos grandes: git lfs track \"$f\""
+            exit 1
+        fi
+    fi
+done
+
+echo "Todas las validaciones pre-commit pasaron"
+exit 0

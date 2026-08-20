@@ -1,0 +1,26 @@
+groups:
+  - name: service.rules
+    interval: 5s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{status="500"}[30s])
+          / rate(http_requests_total[30s]) > 0.05
+        for: 15s
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Tasa de error elevada en demo-app"
+          description: "demo-app tiene {{ $value | humanizePercentage }} de errores en los ultimos 30s"
+          runbook_url: "https://wiki.company.com/runbooks/high-error-rate"
+
+      - alert: ServiceDown
+        expr: up{job="demo-app"} == 0
+        for: 10s
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "demo-app caida"
+          description: "El servicio no responde a los health checks de Prometheus"

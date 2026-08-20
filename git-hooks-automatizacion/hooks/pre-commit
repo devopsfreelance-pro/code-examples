@@ -1,0 +1,38 @@
+#!/bin/bash
+# pre-commit: validaciones rapidas del lado del cliente.
+# Basado en el ejemplo de "Validacion Avanzada de Codigo" del post.
+
+set -e
+
+echo "Ejecutando validaciones pre-commit..."
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$staged_files" ]; then
+    echo "No hay archivos staged, nada que validar."
+    exit 0
+fi
+
+# 1) Verificar formato basico: sin trailing whitespace en lineas nuevas
+fail=0
+for f in $staged_files; do
+    if [ -f "$f" ] && grep -nP ' +$' "$f" > /dev/null 2>&1; then
+        echo "Error: $f tiene lineas con espacios al final (falla de formato)"
+        fail=1
+    fi
+done
+
+if [ "$fail" -ne 0 ]; then
+    echo "El codigo no cumple con el formato establecido"
+    exit 1
+fi
+
+# 2) Verificar que no haya secretos hardcodeados
+if git diff --cached | grep -E "(password|secret|api_key|token)\s*=\s*['\"][^'\"]+['\"]" -i > /dev/null; then
+    echo "Error: se detecto un posible secreto hardcodeado en el diff"
+    echo "Usa variables de entorno en su lugar"
+    exit 1
+fi
+
+echo "Todas las validaciones pre-commit pasaron exitosamente"
+exit 0

@@ -1,0 +1,77 @@
+---
+# Composition
+# Traduce el recurso abstracto "AppDatabase" en recursos concretos.
+# En un entorno real, aca irian recursos de AWS/Azure/GCP (ej: RDSInstance).
+# En este ejemplo local usamos el provider-kubernetes para crear un ConfigMap
+# y un Secret que SIMULAN el endpoint y las credenciales de una base de datos,
+# de forma que el ejemplo corra sin cuentas cloud ni costos.
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xappdatabases.example.org
+  labels:
+    provider: local-demo
+spec:
+  compositeTypeRef:
+    apiVersion: example.org/v1alpha1
+    kind: XAppDatabase
+  resources:
+    - name: db-endpoint-configmap
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha2
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                namespace: default
+                name: placeholder-endpoint
+              data:
+                engine: placeholder
+                size: placeholder
+                host: placeholder.svc.cluster.local
+                port: "5432"
+          providerConfigRef:
+            name: kubernetes-provider
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.engine
+          toFieldPath: spec.forProvider.manifest.data.engine
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.parameters.size
+          toFieldPath: spec.forProvider.manifest.data.size
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.manifest.metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-endpoint"
+
+    - name: db-credentials-secret
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha2
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                namespace: default
+                name: placeholder-credentials
+              stringData:
+                username: app_user
+                password: demo-password-not-for-production
+          providerConfigRef:
+            name: kubernetes-provider
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.manifest.metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-credentials"

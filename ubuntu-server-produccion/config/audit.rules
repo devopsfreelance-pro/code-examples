@@ -1,0 +1,12 @@
+# Reglas de auditoría básicas - /etc/audit/rules.d/audit.rules
+# Tomado del post "Ubuntu Server para producción"
+# Nota: dentro de un contenedor Docker no hay kernel audit subsystem, por lo
+# que auditd no puede correr como daemon. Este archivo se usa solo para que
+# el script de auditoría (scripts/audit-hardening.sh) valide su contenido,
+# tal como se aplicaría en un servidor real.
+
+-w /etc/passwd -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/sudoers -p wa -k actions
+-w /var/log/auth.log -p wa -k authentication

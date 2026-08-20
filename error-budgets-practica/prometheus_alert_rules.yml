@@ -1,0 +1,68 @@
+## Reglas de alertas de Prometheus para error budget, basadas en burn rate.
+## Referencia: mismo enfoque multi-ventana que usa error_budget_report.py
+## (1h para incidentes agudos, 6h para incidentes sostenidos).
+##
+## SLO objetivo: 99.9% de requests exitosas (error budget = 0.1%).
+##
+## No se ejecuta en este ejemplo (requeriria un Prometheus real apuntando
+## a metricas http_requests_total), pero es sintacticamente valido y sirve
+## como referencia para copiar a un stack de Prometheus existente.
+groups:
+  - name: error_budget_alerts
+    interval: 1m
+    rules:
+      - alert: ErrorBudgetBurnRateCritical1h
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[1h]))
+            /
+            sum(rate(http_requests_total[1h]))
+          ) > (0.001 * 14.4)
+        for: 2m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "Burn rate critico de error budget (ventana 1h)"
+          description: >-
+            El servicio {{ $labels.service }} esta quemando error budget a
+            14.4x el ritmo normal. A este ritmo el budget mensual se agota
+            en menos de 2 dias. Bloquear despliegues e investigar de inmediato.
+
+      - alert: ErrorBudgetBurnRateHigh6h
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[6h]))
+            /
+            sum(rate(http_requests_total[6h]))
+          ) > (0.001 * 6)
+        for: 15m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "Burn rate elevado y sostenido de error budget (ventana 6h)"
+          description: >-
+            El servicio {{ $labels.service }} viene consumiendo error budget
+            6x mas rapido de lo normal durante al menos 6 horas. Revisar
+            despliegues recientes y considerar congelamiento preventivo.
+
+      - alert: ErrorBudgetRemainingLow
+        expr: |
+          (
+            1 - (
+              sum(rate(http_requests_total{status=~"2.."}[30d]))
+              /
+              sum(rate(http_requests_total[30d]))
+            )
+          ) > 0.001 * 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "Error budget mensual al 80% de consumo"
+          description: >-
+            El servicio {{ $labels.service }} ha consumido el 80% de su
+            error budget del mes. Evaluar congelamiento de despliegues no
+            criticos hasta fin de periodo.

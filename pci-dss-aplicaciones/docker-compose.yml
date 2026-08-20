@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: pci-demo-db
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: cardholders
+    secrets:
+      - db_password
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d cardholders"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    container_name: pci-demo-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_NAME: cardholders
+      DB_USER: appuser
+      DB_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    ports:
+      - "8080:8080"
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt

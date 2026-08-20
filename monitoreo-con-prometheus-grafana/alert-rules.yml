@@ -1,0 +1,20 @@
+groups:
+  - name: demo_app_alerts
+    rules:
+      - alert: HighRequestLatency
+        expr: avg(rate(app_request_duration_seconds_sum[1m]) / rate(app_request_duration_seconds_count[1m])) > 0.2
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latencia alta en demo_app"
+          description: "La latencia promedio de requests supera los 200ms en los ultimos 1m."
+
+      - alert: HighErrorRate
+        expr: sum(rate(app_requests_total{status="error"}[1m])) / sum(rate(app_requests_total[1m])) > 0.1
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Tasa de errores alta en demo_app"
+          description: "Mas del 10% de los requests estan fallando en los ultimos 1m."

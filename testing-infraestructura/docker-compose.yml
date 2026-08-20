@@ -1,0 +1,20 @@
+version: "3.8"
+
+# LocalStack emula AWS localmente. Sirve como "cuenta de prueba" gratuita
+# para el nivel más alto de la pirámide de testing de IaC (tests de
+# integración con apply + destroy real) sin gastar un centavo en AWS.
+services:
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: testing-infra-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - DEBUG=0
+      - PERSISTENCE=0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

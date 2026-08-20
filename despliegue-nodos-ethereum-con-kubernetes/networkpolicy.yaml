@@ -1,0 +1,28 @@
+# Aisla el nodo Ethereum del resto del cluster (buena practica mencionada
+# en el post): solo permite trafico entrante hacia el puerto RPC (8545)
+# desde pods con label access=rpc-client, y P2P (30303) desde cualquier
+# origen dentro del namespace. Todo lo demas queda bloqueado.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: geth-node-policy
+  namespace: ethereum
+spec:
+  podSelector:
+    matchLabels:
+      app: geth-node
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              access: rpc-client
+      ports:
+        - protocol: TCP
+          port: 8545
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 30303

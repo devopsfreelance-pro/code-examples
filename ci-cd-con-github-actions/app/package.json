@@ -1,0 +1,12 @@
+{
+  "name": "ci-cd-github-actions-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App mínima para demostrar un pipeline CI/CD con GitHub Actions",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test"
+  },
+  "license": "MIT"
+}

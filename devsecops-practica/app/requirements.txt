@@ -1,0 +1,4 @@
+# Flask 0.12.2 y Requests 2.19.1 tienen CVEs conocidas y desactualizadas
+# a proposito, para que el escaneo de dependencias (Trivy) las detecte.
+Flask==0.12.2
+requests==2.19.1

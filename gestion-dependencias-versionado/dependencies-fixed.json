@@ -1,0 +1,7 @@
+{
+  "project": "checkout-service",
+  "requires": {
+    "auth-lib": "~3.2.0",
+    "logging-lib": "^1.0.0"
+  }
+}

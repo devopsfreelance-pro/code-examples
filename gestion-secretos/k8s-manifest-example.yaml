@@ -1,0 +1,27 @@
+# Ejemplo del patron "Secret nativo de Kubernetes" mencionado en el post.
+# Aplicar con: kubectl apply -f k8s-manifest-example.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysecret
+type: Opaque
+stringData:
+  username: app_user
+  password: S3cr3tP4ss!
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+    - name: mycontainer
+      image: busybox:1.36
+      command: ["sh", "-c", "echo \"Usuario recibido via Secret: $SECRET_USERNAME\" && sleep 3600"]
+      env:
+        - name: SECRET_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: username

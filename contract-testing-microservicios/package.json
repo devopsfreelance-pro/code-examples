@@ -1,0 +1,19 @@
+{
+  "name": "contract-testing-microservicios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mini ejemplo de contract testing con Pact: consumer driven contracts entre OrderService y ProductService",
+  "scripts": {
+    "test:consumer": "jest consumer/consumer.test.js --runInBand",
+    "test:provider": "jest provider/provider.test.js --runInBand",
+    "provider:start": "node provider/product-service.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@pact-foundation/pact": "^12.1.0",
+    "axios": "^1.7.2",
+    "jest": "^29.7.0"
+  }
+}

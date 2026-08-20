@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: legacy-debug-tool
+  labels:
+    app: legacy-debug-tool
+spec:
+  containers:
+    - name: debug
+      image: busybox:1.36
+      securityContext:
+        privileged: true

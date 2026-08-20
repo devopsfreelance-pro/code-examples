@@ -1,0 +1,10 @@
+apiVersion: webapp.example.com/v1
+kind: WebApp
+metadata:
+  name: demo-app
+  namespace: default
+spec:
+  image: nginxdemos/hello:plain-text
+  replicas: 2
+  domain: demo.example.com
+  port: 8080

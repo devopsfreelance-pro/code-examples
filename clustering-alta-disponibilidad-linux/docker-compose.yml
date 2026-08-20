@@ -1,0 +1,33 @@
+services:
+  web1:
+    image: nginx:1.27-alpine
+    container_name: ha_web1
+    volumes:
+      - ./web1/index.html:/usr/share/nginx/html/index.html:ro
+    networks:
+      - ha_cluster
+
+  web2:
+    image: nginx:1.27-alpine
+    container_name: ha_web2
+    volumes:
+      - ./web2/index.html:/usr/share/nginx/html/index.html:ro
+    networks:
+      - ha_cluster
+
+  haproxy:
+    image: haproxy:2.9-alpine
+    container_name: ha_haproxy
+    depends_on:
+      - web1
+      - web2
+    ports:
+      - "8080:80"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    networks:
+      - ha_cluster
+
+networks:
+  ha_cluster:
+    driver: bridge

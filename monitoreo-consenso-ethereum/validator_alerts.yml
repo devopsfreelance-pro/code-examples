@@ -1,0 +1,20 @@
+groups:
+  - name: ethereum_validator_alerts
+    rules:
+      - alert: ValidatorMissedAttestation
+        expr: increase(validator_missed_attestations_total[1h]) > 3
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validator missing attestations"
+          description: "Validator {{ $labels.validator_index }} has missed {{ $value }} attestations in the last hour"
+
+      - alert: ValidatorOffline
+        expr: validator_status != 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Validator offline"
+          description: "Validator {{ $labels.validator_index }} appears to be offline"

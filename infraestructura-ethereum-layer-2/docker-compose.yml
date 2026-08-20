@@ -1,0 +1,17 @@
+services:
+  l2-exporter:
+    build: .
+    container_name: l2-exporter
+    ports:
+      - "9101:9101"
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: l2-prometheus
+    depends_on:
+      - l2-exporter
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.yml:/etc/prometheus/alerts.yml:ro

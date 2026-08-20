@@ -1,0 +1,37 @@
+# NetworkPolicy: microsegmentación de red (principio Zero Trust del post).
+# El pod "secure-app" solo puede recibir trafico entrante desde pods con la
+# etiqueta app=allowed-client, y solo puede salir hacia DNS. Todo lo demas
+# queda bloqueado por defecto al declarar policyTypes Ingress+Egress.
+#
+# NOTA: el CNI por defecto de kind (kindnet) NO aplica NetworkPolicies.
+# Este manifest se incluye para mostrar la sintaxis y poder aplicarlo sin
+# error; para verificar el bloqueo real hace falta un CNI compatible
+# (Calico, Cilium). El README explica como comprobarlo igual con kubectl.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: secure-app-network-policy
+  namespace: secure-demo
+spec:
+  podSelector:
+    matchLabels:
+      app: secure-app
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: allowed-client
+      ports:
+        - port: 8080
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP

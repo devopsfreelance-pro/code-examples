@@ -1,0 +1,85 @@
+## Demo minimo de autoscaling horizontal (HPA) para operaciones a escala
+## Deployment + Service + HorizontalPodAutoscaler
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-service
+  labels:
+    app: echo-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: echo-service
+  template:
+    metadata:
+      labels:
+        app: echo-service
+    spec:
+      containers:
+      - name: echo-service
+        image: hashicorp/http-echo:1.0
+        args:
+        - "-text=ok"
+        - "-listen=:8080"
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "32Mi"
+          limits:
+            cpu: "100m"
+            memory: "64Mi"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-service
+spec:
+  selector:
+    app: echo-service
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: echo-service-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: echo-service
+  minReplicas: 1
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 15
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 60

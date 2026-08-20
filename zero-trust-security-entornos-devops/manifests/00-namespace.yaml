@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zero-trust-demo
+  labels:
+    name: zero-trust-demo

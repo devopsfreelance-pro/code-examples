@@ -1,0 +1,16 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowIamAdminFromTrustedNetwork",
+      "Effect": "Allow",
+      "Action": ["iam:*"],
+      "Resource": ["*"],
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "10.0.0.0/8"
+        }
+      }
+    }
+  ]
+}

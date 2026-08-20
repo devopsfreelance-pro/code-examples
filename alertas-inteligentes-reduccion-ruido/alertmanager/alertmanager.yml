@@ -1,0 +1,71 @@
+# Alertmanager: enrutamiento por severidad, agrupamiento (noise reduction)
+# e inhibicion de alertas redundantes cuando ya hay una critica activa.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: default-receiver
+  group_by: ["alertname", "service"]
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
+  routes:
+    # Critical: interrumpe ya, agrupa rapido, se repite seguido mientras siga activa
+    - matchers:
+        - severity = critical
+      receiver: critical-receiver
+      group_wait: 5s
+      group_interval: 15s
+      repeat_interval: 5m
+      continue: false
+
+    # High: menos intrusivo, ventana de agrupamiento mas amplia
+    - matchers:
+        - severity = high
+      receiver: high-receiver
+      group_wait: 15s
+      group_interval: 1m
+      repeat_interval: 30m
+      continue: false
+
+    # Low: informativo, se agrega y se repite poco (destino tipico: reporte periodico)
+    - matchers:
+        - severity = low
+      receiver: default-receiver
+      group_wait: 5m
+      group_interval: 10m
+      repeat_interval: 4h
+      continue: false
+
+receivers:
+  - name: default-receiver
+    webhook_configs:
+      - url: "http://receiver:9093/default"
+        send_resolved: true
+
+  - name: high-receiver
+    webhook_configs:
+      - url: "http://receiver:9092/high"
+        send_resolved: true
+
+  - name: critical-receiver
+    webhook_configs:
+      - url: "http://receiver:9091/critical"
+        send_resolved: true
+
+# Si ya hay una critical activa para un service, se suprimen las high/low del
+# mismo service: evita que 50 alertas de "servicios backend inaccesibles"
+# lleguen cuando el problema real es el balanceador que ya disparo critical.
+inhibit_rules:
+  - source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity = high
+    equal: ["service"]
+
+  - source_matchers:
+      - severity = critical
+    target_matchers:
+      - severity = low
+    equal: ["service"]

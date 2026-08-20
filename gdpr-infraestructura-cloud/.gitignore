@@ -1,0 +1,5 @@
+venv/
+gdpr_demo.key
+audit.log
+__pycache__/
+*.pyc

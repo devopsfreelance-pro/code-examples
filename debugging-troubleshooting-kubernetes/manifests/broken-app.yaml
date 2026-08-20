@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: debug-demo
+---
+# Deployment que entra en CrashLoopBackOff: el comando falla al arrancar.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crashy-app
+  namespace: debug-demo
+  labels:
+    app: crashy-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crashy-app
+  template:
+    metadata:
+      labels:
+        app: crashy-app
+    spec:
+      containers:
+        - name: crashy-app
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args:
+            - "echo 'iniciando app...'; echo 'ERROR: no se encontro CONFIG_PATH' >&2; exit 1"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+---
+# Deployment sano (para servir de contraste), pero con readiness probe
+# apuntando a un puerto/ruta que nunca responde: se queda NotReady.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notready-app
+  namespace: debug-demo
+  labels:
+    app: notready-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notready-app
+  template:
+    metadata:
+      labels:
+        app: notready-app
+    spec:
+      containers:
+        - name: notready-app
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args:
+            - "while true; do echo 'app corriendo, pero sin servidor HTTP'; sleep 5; done"
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+---
+# Service cuyo selector no coincide con ningun pod -> "sin endpoints".
+apiVersion: v1
+kind: Service
+metadata:
+  name: notready-app-svc
+  namespace: debug-demo
+spec:
+  selector:
+    app: nombre-incorrecto
+  ports:
+    - port: 80
+      targetPort: 8080

@@ -1,0 +1,40 @@
+version: "3.9"
+
+# Stack de Docker Swarm: un servicio "whoami" con 3 réplicas, balanceo de
+# carga integrado (routing mesh) y actualizaciones continuas (rolling update).
+#
+# Desplegar con:
+#   docker swarm init
+#   docker stack deploy -c docker-compose.stack.yml demo
+
+services:
+  web:
+    image: traefik/whoami:v1.10
+    ports:
+      - target: 80
+        published: 8000
+        protocol: tcp
+        mode: ingress
+    networks:
+      - demo-net
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 5s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: "0.20"
+          memory: 64M
+        reservations:
+          cpus: "0.10"
+          memory: 32M
+
+networks:
+  demo-net:
+    driver: overlay

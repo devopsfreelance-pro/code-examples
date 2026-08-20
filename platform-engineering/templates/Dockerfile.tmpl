@@ -1,0 +1,16 @@
+# Dockerfile generado automaticamente para el servicio: $service_name
+# Multi-stage build pre-configurado por la plataforma.
+
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY src/ ./src/
+
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app /app
+EXPOSE 3000
+USER node
+CMD ["node", "src/index.js"]

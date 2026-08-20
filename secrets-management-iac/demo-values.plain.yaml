@@ -1,0 +1,5 @@
+# demo-values.plain.yaml - archivo DEMO en texto plano.
+# Nunca se comitea a git (ver README): es solo el insumo de entrada para encrypt.sh.
+# Los valores son ficticios, no son credenciales reales.
+db_password: S3cr3tP4ss!Demo
+api_key: demo-api-key-0123456789

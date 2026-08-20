@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-backend
+  labels:
+    app: api-backend
+spec:
+  containers:
+    - name: api
+      image: nginx:1.27-alpine
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        privileged: false

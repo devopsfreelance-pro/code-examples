@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReadDataBucket",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::mi-bucket-datos",
+        "arn:aws:s3:::mi-bucket-datos/*"
+      ],
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "192.0.2.0/24"
+        },
+        "Bool": {
+          "aws:SecureTransport": "true"
+        }
+      }
+    }
+  ]
+}

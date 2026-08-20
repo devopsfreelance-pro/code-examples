@@ -1,0 +1,15 @@
+# Objeto deliberadamente inválido para el schema del CRD:
+# - replicas supera el maximum (10) definido en webapp-crd.yaml
+# - domain no cumple el pattern (contiene un espacio)
+# El API server debe rechazarlo con un error 422/Invalid ANTES de que
+# llegue a etcd, sin que exista ningún controller corriendo. Esto
+# demuestra la validación de esquema que hace el propio CRD.
+apiVersion: webapp.example.com/v1
+kind: WebApp
+metadata:
+  name: broken-app
+  namespace: default
+spec:
+  image: nginxdemos/hello:plain-text
+  replicas: 25
+  domain: "dominio invalido"

@@ -1,0 +1,14 @@
+resource_id,service,environment,cost_center,daily_cost_usd,avg_cpu_utilization_pct,instance_type
+i-0a1b2c3d4e5f60001,EC2,prod,cc-checkout,42.50,68,m5.xlarge
+i-0a1b2c3d4e5f60002,EC2,prod,cc-checkout,42.50,12,m5.xlarge
+i-0a1b2c3d4e5f60003,EC2,staging,,18.30,4,m5.large
+i-0a1b2c3d4e5f60004,EC2,dev,,18.30,2,m5.large
+i-0a1b2c3d4e5f60005,EC2,prod,cc-search,31.20,55,m5.large
+rds-prod-orders-01,RDS,prod,cc-orders,64.00,71,db.r5.xlarge
+rds-staging-orders-01,RDS,staging,,32.00,8,db.r5.large
+s3-prod-data-lake,S3,prod,cc-data,150.00,,
+s3-dev-scratch,S3,dev,,45.00,,
+ebs-vol-orphan-0001,EBS,,,9.80,,
+ebs-vol-orphan-0002,EBS,,,9.80,,
+eks-cluster-prod-nodes,EKS,prod,cc-platform,210.00,74,m5.2xlarge
+eks-cluster-dev-nodes,EKS,dev,,95.00,9,m5.2xlarge

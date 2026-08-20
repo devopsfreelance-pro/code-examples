@@ -1,0 +1,11 @@
+{
+  "name": "hello-ci-cd",
+  "version": "1.0.0",
+  "description": "App minima usada por el pipeline de Jenkins de ejemplo",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node -e \"const {sum}=require('./index'); const assert=require('assert'); assert.strictEqual(sum(2,3),5); console.log('OK: sum(2,3) === 5');\""
+  },
+  "license": "MIT"
+}

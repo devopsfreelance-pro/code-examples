@@ -1,0 +1,9 @@
+apiVersion: example.com/v1alpha1
+kind: Database
+metadata:
+  name: demo-db
+  namespace: default
+spec:
+  image: postgres:16-alpine
+  replicas: 2
+  port: 5432

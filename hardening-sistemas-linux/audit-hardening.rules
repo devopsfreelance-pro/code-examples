@@ -1,0 +1,28 @@
+# Reglas de auditd inspiradas en CIS Benchmark 4.1 (registro de eventos criticos)
+# Se cargan con: auditctl -R /etc/audit/rules.d/hardening.rules
+# (o al iniciar el servicio auditd, que las lee de /etc/audit/rules.d/)
+
+# Borrar reglas previas y fijar tamano de buffer
+-D
+-b 8192
+
+# Cambios en identidad de usuarios y permisos
+-w /etc/passwd -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/sudoers -p wa -k scope
+-w /etc/sudoers.d/ -p wa -k scope
+
+# Cambios en configuracion de red
+-w /etc/hosts -p wa -k network
+-w /etc/network/ -p wa -k network
+
+# Uso de comandos privilegiados
+-w /usr/bin/sudo -p x -k privileged
+
+# Modificaciones a la configuracion de SSH
+-w /etc/ssh/sshd_config -p wa -k sshd
+
+# Hacer las reglas inmutables hasta el proximo reinicio (requiere que sea la ultima linea)
+-e 2

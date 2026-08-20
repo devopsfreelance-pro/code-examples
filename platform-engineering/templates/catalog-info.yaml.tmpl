@@ -1,0 +1,16 @@
+# Registro en el catalogo de servicios, generado automaticamente.
+# Equivalente simplificado al catalog-info.yaml que usa Backstage.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: $service_name
+  description: "Servicio generado por el golden path de la plataforma"
+  annotations:
+    github.com/project-slug: my-org/$service_name
+spec:
+  type: service
+  lifecycle: production
+  owner: $owner
+  dependsOn:
+    - database:$database
+    - cache:$cache

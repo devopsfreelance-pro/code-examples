@@ -1,0 +1,26 @@
+# Ejemplo de referencia (no se ejecuta localmente): mismo escaneo de scan.sh
+# integrado como stage de GitLab CI, tal como se describe en el post del blog.
+stages:
+  - build
+  - scan
+
+build_image:
+  stage: build
+  image: docker:24.0
+  services:
+    - docker:24.0-dind
+  script:
+    - docker build -f Dockerfile.vulnerable -t demo-scan:latest .
+    - docker save demo-scan:latest -o image.tar
+  artifacts:
+    paths:
+      - image.tar
+    expire_in: 1 hour
+
+scan_image:
+  stage: scan
+  image: aquasec/trivy:latest
+  needs:
+    - build_image
+  script:
+    - trivy image --input image.tar --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed

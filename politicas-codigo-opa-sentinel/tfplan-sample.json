@@ -1,0 +1,67 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.15.0",
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.logs_sin_cifrar",
+      "type": "aws_s3_bucket",
+      "name": "logs_sin_cifrar",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "bucket": "empresa-logs-raw"
+        }
+      }
+    },
+    {
+      "address": "aws_s3_bucket.assets_cifrado",
+      "type": "aws_s3_bucket",
+      "name": "assets_cifrado",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "bucket": "empresa-assets",
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    { "sse_algorithm": "AES256" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "address": "aws_instance.batch_costoso",
+      "type": "aws_instance",
+      "name": "batch_costoso",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "instance_type": "t3.2xlarge",
+          "tags": {
+            "Environment": "produccion"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_instance.api_normal",
+      "type": "aws_instance",
+      "name": "api_normal",
+      "change": {
+        "actions": ["create"],
+        "after": {
+          "instance_type": "t3.medium",
+          "tags": {
+            "Environment": "produccion"
+          }
+        }
+      }
+    }
+  ]
+}

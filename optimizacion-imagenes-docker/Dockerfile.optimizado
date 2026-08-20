@@ -1,0 +1,15 @@
+# Dockerfile optimizado con multi-stage build:
+# etapa 1 compila el binario, etapa 2 lo ejecuta sobre una imagen minima.
+
+## Etapa 1: Construccion
+FROM golang:1.21-alpine AS builder
+WORKDIR /app
+COPY go.mod ./
+COPY main.go ./
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+## Etapa 2: Imagen final minima
+FROM scratch
+COPY --from=builder /app/main /main
+EXPOSE 8080
+ENTRYPOINT ["/main"]

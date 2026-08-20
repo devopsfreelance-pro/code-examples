@@ -1,0 +1,50 @@
+# Pod SEGURO: cumple el perfil "restricted" de Pod Security Admission.
+# Corre como usuario no root, sin privilege escalation, sin capabilities,
+# con seccomp RuntimeDefault y filesystem de solo lectura.
+# Basado en el ejemplo de Security Contexts del post del blog.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-app
+  namespace: secure-demo
+  labels:
+    app: secure-app
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    fsGroup: 101
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: app
+      image: nginxinc/nginx-unprivileged:1.27-alpine
+      ports:
+        - containerPort: 8080
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        limits:
+          cpu: "200m"
+          memory: "128Mi"
+        requests:
+          cpu: "50m"
+          memory: "64Mi"
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /var/cache/nginx
+        - name: run
+          mountPath: /var/run
+  volumes:
+    - name: tmp
+      emptyDir: {}
+    - name: cache
+      emptyDir: {}
+    - name: run
+      emptyDir: {}

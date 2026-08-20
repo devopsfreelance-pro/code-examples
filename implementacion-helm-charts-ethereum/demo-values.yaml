@@ -1,0 +1,19 @@
+# Archivo de override, análogo al "ethereum-mainnet-values.yaml" del post:
+# no se toca el values.yaml del chart, se sobrescriben solo los valores
+# que cambian para este "entorno" (acá, una demo local en kind).
+
+network: "mainnet-demo"
+syncMode: "full"
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+persistence:
+  enabled: true
+  size: "2Gi"
+  storageClass: "standard"

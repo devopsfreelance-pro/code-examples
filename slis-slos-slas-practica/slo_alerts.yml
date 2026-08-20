@@ -1,0 +1,20 @@
+## Regla de alerta basada en burn rate del error budget.
+## Misma expresion PromQL que la del post (umbral 0.1% de 5xx sobre el total).
+## "for" se bajo de 5m a 15s SOLO para que la demo local dispare rapido;
+## en produccion usa "for: 5m" (o mas) como recomienda el post.
+groups:
+  - name: slo_alerts
+    rules:
+      - alert: ErrorBudgetBurnRateHigh
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) > 0.001
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consumo elevado del error budget en {{ $labels.service }}"
+          description: "La tasa de errores 5xx supera el umbral del SLO (0.1%) durante los ultimos 5 minutos. A este ritmo, el error budget mensual se agotara antes de tiempo."

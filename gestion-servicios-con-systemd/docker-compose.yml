@@ -1,0 +1,14 @@
+services:
+  systemd-demo:
+    build: .
+    container_name: systemd-demo
+    privileged: true
+    cgroup: host
+    tmpfs:
+      - /run
+      - /run/lock
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    ports:
+      - "8080:8080"
+    stop_signal: SIGRTMIN+3

@@ -1,0 +1,42 @@
+{
+  "_comment": "Datos sinteticos de dos sprints consecutivos (14 dias c/u) para un mismo equipo. El sprint 2 incluye las mejoras kaizen decididas en la retrospectiva del sprint 1: mas despliegues chicos, reviews mas rapidos y un incidente resuelto con feature flag en vez de rollback manual.",
+  "sprint_1": {
+    "label": "Sprint 12 (antes de aplicar mejoras kaizen)",
+    "deployments": [
+      {"id": "d1", "commit_at": "2026-03-02T09:10:00-03:00", "deployed_at": "2026-03-03T18:40:00-03:00"},
+      {"id": "d2", "commit_at": "2026-03-05T11:00:00-03:00", "deployed_at": "2026-03-07T09:15:00-03:00"},
+      {"id": "d3", "commit_at": "2026-03-09T14:30:00-03:00", "deployed_at": "2026-03-10T20:05:00-03:00"},
+      {"id": "d4", "commit_at": "2026-03-12T08:45:00-03:00", "deployed_at": "2026-03-14T10:30:00-03:00"}
+    ],
+    "incidents": [
+      {
+        "id": "inc1",
+        "caused_by_deployment": "d2",
+        "started_at": "2026-03-07T09:40:00-03:00",
+        "resolved_at": "2026-03-07T13:55:00-03:00"
+      }
+    ],
+    "period_days": 14
+  },
+  "sprint_2": {
+    "label": "Sprint 13 (despues de aplicar mejoras kaizen)",
+    "deployments": [
+      {"id": "d5", "commit_at": "2026-03-16T09:00:00-03:00", "deployed_at": "2026-03-16T15:20:00-03:00"},
+      {"id": "d6", "commit_at": "2026-03-17T10:30:00-03:00", "deployed_at": "2026-03-17T16:10:00-03:00"},
+      {"id": "d7", "commit_at": "2026-03-19T08:20:00-03:00", "deployed_at": "2026-03-19T13:45:00-03:00"},
+      {"id": "d8", "commit_at": "2026-03-21T09:15:00-03:00", "deployed_at": "2026-03-21T14:00:00-03:00"},
+      {"id": "d9", "commit_at": "2026-03-23T11:00:00-03:00", "deployed_at": "2026-03-23T16:30:00-03:00"},
+      {"id": "d10", "commit_at": "2026-03-25T09:45:00-03:00", "deployed_at": "2026-03-25T14:50:00-03:00"},
+      {"id": "d11", "commit_at": "2026-03-27T10:10:00-03:00", "deployed_at": "2026-03-27T15:35:00-03:00"}
+    ],
+    "incidents": [
+      {
+        "id": "inc2",
+        "caused_by_deployment": "d7",
+        "started_at": "2026-03-19T14:00:00-03:00",
+        "resolved_at": "2026-03-19T14:25:00-03:00"
+      }
+    ],
+    "period_days": 14
+  }
+}

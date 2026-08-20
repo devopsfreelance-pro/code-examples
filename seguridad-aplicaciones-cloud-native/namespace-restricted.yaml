@@ -1,0 +1,12 @@
+# Namespace con Pod Security Admission (built-in en Kubernetes >= 1.25)
+# En modo "enforce: restricted" el API server RECHAZA cualquier Pod que no
+# cumpla el perfil restringido (correr como root, sin drop de capabilities,
+# sin seccomp, con privilege escalation, etc). No requiere instalar Kyverno
+# ni OPA Gatekeeper: es funcionalidad nativa del cluster.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secure-demo
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest

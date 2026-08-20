@@ -1,0 +1,20 @@
+services:
+  # Simula un proceso que intenta usar 2 cores pero esta limitado por cgroups
+  # a 0.5 CPU (equivalente a CPUQuota=50% en una unit de systemd).
+  cpu-limitado:
+    build: .
+    container_name: demo-cpu-limitado
+    cpus: "0.5"
+    command: ["--cpu", "2", "--cpu-load", "100", "--timeout", "20s", "--metrics-brief"]
+    restart: "no"
+
+  # Simula un proceso que intenta reservar 300MB pero esta limitado por
+  # cgroups a 100MB (equivalente a MemoryMax=100M en una unit de systemd).
+  # El kernel debe matarlo por OOM (Out Of Memory) dentro del cgroup.
+  mem-limitado:
+    build: .
+    container_name: demo-mem-limitado
+    mem_limit: 100m
+    memswap_limit: 100m
+    command: ["--vm", "1", "--vm-bytes", "300M", "--vm-keep", "--timeout", "20s", "--metrics-brief"]
+    restart: "no"

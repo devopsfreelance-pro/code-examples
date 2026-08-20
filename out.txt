@@ -1,0 +1,38 @@
+{"timestamp":"2026-08-20T14:44:41+00:00","level":"INFO","service":"payments-api","trace_id":"tr-1437","message":"Payment processed successfully","latency_ms":97}
+{"timestamp":"2026-08-20T14:44:43+00:00","level":"INFO","service":"payments-api","trace_id":"tr-10940","message":"Payment processed successfully","latency_ms":52}
+{"timestamp":"2026-08-20T14:44:45+00:00","level":"INFO","service":"payments-api","trace_id":"tr-2963","message":"Payment processed successfully","latency_ms":113}
+{"timestamp":"2026-08-20T14:44:47+00:00","level":"INFO","service":"payments-api","trace_id":"tr-32285","message":"Payment processed successfully","latency_ms":116}
+{"timestamp":"2026-08-20T14:44:49+00:00","level":"ERROR","service":"payments-api","trace_id":"tr-29117","message":"Failed to process payment","latency_ms":280}
+{"timestamp":"2026-08-20T14:44:51+00:00","level":"INFO","service":"payments-api","trace_id":"tr-22638","message":"Payment processed successfully","latency_ms":136}
+{"timestamp":"2026-08-20T14:44:53+00:00","level":"INFO","service":"payments-api","trace_id":"tr-3211","message":"Payment processed successfully","latency_ms":269}
+{"timestamp":"2026-08-20T14:44:55+00:00","level":"INFO","service":"payments-api","trace_id":"tr-29551","message":"Payment processed successfully","latency_ms":396}
+{"timestamp":"2026-08-20T14:44:57+00:00","level":"INFO","service":"payments-api","trace_id":"tr-9949","message":"Payment processed successfully","latency_ms":292}
+{"timestamp":"2026-08-20T14:44:59+00:00","level":"ERROR","service":"payments-api","trace_id":"tr-4584","message":"Failed to process payment","latency_ms":375}
+{"timestamp":"2026-08-20T14:45:01+00:00","level":"INFO","service":"payments-api","trace_id":"tr-3711","message":"Payment processed successfully","latency_ms":390}
+{"timestamp":"2026-08-20T14:45:03+00:00","level":"INFO","service":"payments-api","trace_id":"tr-25075","message":"Payment processed successfully","latency_ms":173}
+{"timestamp":"2026-08-20T14:45:05+00:00","level":"INFO","service":"payments-api","trace_id":"tr-13308","message":"Payment processed successfully","latency_ms":73}
+{"timestamp":"2026-08-20T14:45:07+00:00","level":"INFO","service":"payments-api","trace_id":"tr-11891","message":"Payment processed successfully","latency_ms":135}
+{"timestamp":"2026-08-20T14:45:09+00:00","level":"ERROR","service":"payments-api","trace_id":"tr-21809","message":"Failed to process payment","latency_ms":93}
+{"timestamp":"2026-08-20T14:45:11+00:00","level":"INFO","service":"payments-api","trace_id":"tr-26097","message":"Payment processed successfully","latency_ms":390}
+{"timestamp":"2026-08-20T14:45:13+00:00","level":"INFO","service":"payments-api","trace_id":"tr-13679","message":"Payment processed successfully","latency_ms":184}
+{"timestamp":"2026-08-20T14:45:15+00:00","level":"INFO","service":"payments-api","trace_id":"tr-22944","message":"Payment processed successfully","latency_ms":83}
+{"timestamp":"2026-08-20T14:45:17+00:00","level":"INFO","service":"payments-api","trace_id":"tr-4673","message":"Payment processed successfully","latency_ms":361}
+{"timestamp":"2026-08-20T14:45:19+00:00","level":"ERROR","service":"payments-api","trace_id":"tr-2582","message":"Failed to process payment","latency_ms":254}
+{"timestamp":"2026-08-20T14:45:21+00:00","level":"INFO","service":"payments-api","trace_id":"tr-4586","message":"Payment processed successfully","latency_ms":127}
+{"timestamp":"2026-08-20T14:45:23+00:00","level":"INFO","service":"payments-api","trace_id":"tr-3488","message":"Payment processed successfully","latency_ms":106}
+{"timestamp":"2026-08-20T14:45:25+00:00","level":"INFO","service":"payments-api","trace_id":"tr-31901","message":"Payment processed successfully","latency_ms":362}
+{"timestamp":"2026-08-20T14:45:27+00:00","level":"INFO","service":"payments-api","trace_id":"tr-1256","message":"Payment processed successfully","latency_ms":187}
+{"timestamp":"2026-08-20T14:45:29+00:00","level":"ERROR","service":"payments-api","trace_id":"tr-27437","message":"Failed to process payment","latency_ms":248}
+{"timestamp":"2026-08-20T14:45:31+00:00","level":"INFO","service":"payments-api","trace_id":"tr-1868","message":"Payment processed successfully","latency_ms":302}
+{"timestamp":"2026-08-20T14:45:33+00:00","level":"INFO","service":"payments-api","trace_id":"tr-20903","message":"Payment processed successfully","latency_ms":175}
+{"timestamp":"2026-08-20T14:45:35+00:00","level":"INFO","service":"payments-api","trace_id":"tr-16967","message":"Payment processed successfully","latency_ms":121}
+{"timestamp":"2026-08-20T14:45:37+00:00","level":"INFO","service":"payments-api","trace_id":"tr-38","message":"Payment processed successfully","latency_ms":65}
+{"timestamp":"2026-08-20T14:45:39+00:00","level":"ERROR","service":"payments-api","trace_id":"tr-332","message":"Failed to process payment","latency_ms":287}
+{"timestamp":"2026-08-20T14:45:41+00:00","level":"INFO","service":"payments-api","trace_id":"tr-24468","message":"Payment processed successfully","latency_ms":85}
+{"timestamp":"2026-08-20T14:45:43+00:00","level":"INFO","service":"payments-api","trace_id":"tr-21204","message":"Payment processed successfully","latency_ms":64}
+{"timestamp":"2026-08-20T14:45:45+00:00","level":"INFO","service":"payments-api","trace_id":"tr-30183","message":"Payment processed successfully","latency_ms":18}
+{"timestamp":"2026-08-20T14:45:47+00:00","level":"INFO","service":"payments-api","trace_id":"tr-2754","message":"Payment processed successfully","latency_ms":287}
+{"timestamp":"2026-08-20T14:45:49+00:00","level":"ERROR","service":"payments-api","trace_id":"tr-500","message":"Failed to process payment","latency_ms":86}
+{"timestamp":"2026-08-20T14:45:51+00:00","level":"INFO","service":"payments-api","trace_id":"tr-21440","message":"Payment processed successfully","latency_ms":98}
+{"timestamp":"2026-08-20T14:45:53+00:00","level":"INFO","service":"payments-api","trace_id":"tr-10388","message":"Payment processed successfully","latency_ms":395}
+{"timestamp":"2026-08-20T14:45:55+00:00","level":"INFO","service":"payments-api","trace_id":"tr-25528","message":"Payment processed successfully","latency_ms":170}

@@ -1,0 +1,28 @@
+# $service_name
+
+Documentacion tecnica generada automaticamente por el golden path de la plataforma (TechDocs).
+
+## Owner
+
+$owner
+
+## Infraestructura provisionada
+
+- Base de datos: $database
+- Cache: $cache
+
+## Endpoints
+
+- Health check: `GET /health`
+
+## Como desplegar
+
+1. Hace push a `main`.
+2. El pipeline de CI/CD (`.github/workflows/ci-cd.yaml`) builda la imagen, corre tests y actualiza `k8s/deployment.yaml`.
+3. ArgoCD detecta el cambio en `k8s/` y sincroniza el cluster.
+
+## Como debuggear
+
+- Logs: `kubectl logs deploy/$service_name`
+- Metricas: dashboard automatico en Grafana bajo el nombre `$service_name`.
+- Alertas: definidas en `monitoring/alerts.yaml`.

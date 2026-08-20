@@ -1,0 +1,31 @@
+services:
+  exporter:
+    build: .
+    container_name: eth-validator-exporter
+    ports:
+      - "8081:8081"
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: eth-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./validator_alerts.yml:/etc/prometheus/validator_alerts.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    depends_on:
+      - exporter
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: eth-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus

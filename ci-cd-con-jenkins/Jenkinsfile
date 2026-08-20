@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_DIR = 'app'
+    }
+
+    options {
+        timeout(time: 10, unit: 'MINUTES')
+        timestamps()
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                sh 'rm -rf ${APP_DIR} && cp -r /mnt/app ${APP_DIR}'
+            }
+        }
+
+        stage('Install') {
+            steps {
+                dir(APP_DIR) {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir(APP_DIR) {
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir(APP_DIR) {
+                    sh "tar -czf ../hello-ci-cd-${env.BUILD_NUMBER}.tar.gz ."
+                }
+                sh "ls -la hello-ci-cd-${env.BUILD_NUMBER}.tar.gz"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Build OK: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+        }
+        failure {
+            echo "Build FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+        }
+    }
+}

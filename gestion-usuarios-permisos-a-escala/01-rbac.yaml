@@ -1,0 +1,70 @@
+# RBAC de "menor privilegio" para dos roles distintos, tal como describe el
+# post: separación de responsabilidades entre developers y security team.
+
+---
+# ClusterRole para desarrolladores: puede operar deployments/pods pero NO
+# puede tocar secrets ni borrar pods. Es prácticamente el mismo ClusterRole
+# "developer-role" del post.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: developer-role
+rules:
+- apiGroups: ["apps", "extensions"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: [""]
+  resources: ["pods", "services"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]
+
+---
+# ClusterRole para el equipo de seguridad: solo lectura de secrets y de
+# eventos, para auditoría. Nada de crear/editar deployments.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: security-role
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch"]
+
+---
+# RoleBinding: ata developer-role al ServiceAccount developer-sa, solo
+# dentro del namespace "development" (least privilege: scope acotado).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: developer-binding
+  namespace: development
+subjects:
+- kind: ServiceAccount
+  name: developer-sa
+  namespace: development
+roleRef:
+  kind: ClusterRole
+  name: developer-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# RoleBinding: ata security-role al ServiceAccount security-sa, también
+# acotado al namespace "development".
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: security-binding
+  namespace: development
+subjects:
+- kind: ServiceAccount
+  name: security-sa
+  namespace: development
+roleRef:
+  kind: ClusterRole
+  name: security-role
+  apiGroup: rbac.authorization.k8s.io

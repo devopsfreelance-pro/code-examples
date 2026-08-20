@@ -1,0 +1,37 @@
+groups:
+  - name: blockchain-network-observability
+    rules:
+      - alert: BlockHeightDivergence
+        expr: max(blockchain_node_block_height) - min(blockchain_node_block_height) > 5
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Divergencia de altura de bloque entre nodos de la red"
+          description: >-
+            La diferencia entre el nodo mas adelantado y el mas atrasado
+            supera los 5 bloques durante mas de 15s. Puede indicar un nodo
+            desincronizado o un problema de propagacion en la red.
+
+      - alert: NodeLowPeerCount
+        expr: blockchain_node_peer_count < 5
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Nodo {{ $labels.node_id }} con pocos peers conectados"
+          description: >-
+            El nodo {{ $labels.node_id }} tiene menos de 5 peers, lo que
+            reduce su visibilidad de la red y aumenta el riesgo de quedar
+            aislado (eclipse attack o particion de red).
+
+      - alert: HighBlockPropagationLatency
+        expr: blockchain_node_block_propagation_seconds > 3
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latencia alta de propagacion de bloques en {{ $labels.node_id }}"
+          description: >-
+            El nodo {{ $labels.node_id }} tarda mas de 3s en recibir bloques
+            nuevos, lo que puede degradar la confirmacion de transacciones.

@@ -1,0 +1,22 @@
+[Unit]
+Description=Demo Web Service (ejemplo del post gestion de servicios con systemd)
+Documentation=https://www.devopsfreelance.pro/blog/posts/gestion-servicios-con-systemd/
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/webapp/server.py
+Restart=on-failure
+RestartSec=3s
+StartLimitIntervalSec=60s
+StartLimitBurst=5
+
+# Hardening basico
+NoNewPrivileges=true
+PrivateTmp=true
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

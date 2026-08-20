@@ -1,0 +1,6 @@
+FROM docker:27-cli
+RUN apk add --no-cache curl
+WORKDIR /app
+COPY watcher.sh .
+RUN chmod +x watcher.sh
+CMD ["./watcher.sh"]

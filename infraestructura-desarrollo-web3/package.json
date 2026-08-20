@@ -1,0 +1,14 @@
+{
+  "name": "infraestructura-desarrollo-web3-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mini ejemplo: nodo blockchain local + contrato inteligente + lectura on-chain con ethers.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "demo": "hardhat run scripts/deploy_and_read.js"
+  },
+  "devDependencies": {
+    "hardhat": "^2.22.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+  }
+}

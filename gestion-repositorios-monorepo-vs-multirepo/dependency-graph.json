@@ -1,0 +1,20 @@
+{
+  "projects": {
+    "shared": {
+      "path": "libs/shared",
+      "dependsOn": []
+    },
+    "api": {
+      "path": "apps/api",
+      "dependsOn": ["shared"]
+    },
+    "web": {
+      "path": "apps/web",
+      "dependsOn": ["shared"]
+    },
+    "docs": {
+      "path": "apps/docs",
+      "dependsOn": []
+    }
+  }
+}

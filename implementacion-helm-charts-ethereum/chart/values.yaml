@@ -1,0 +1,32 @@
+# Valores por defecto del chart. Equivalente reducido al values.yaml
+# de un chart real de geth/besu: imagen, red, recursos y persistencia.
+
+image:
+  repository: hashicorp/http-echo
+  tag: "0.2.3"
+  pullPolicy: IfNotPresent
+
+# En un chart real de Ethereum esto sería mainnet/sepolia/holesky.
+network: "sepolia-demo"
+# En un chart real: snap | full | light.
+syncMode: "snap"
+
+service:
+  type: ClusterIP
+  rpcPort: 8545
+
+persistence:
+  enabled: true
+  size: "1Gi"
+  accessMode: ReadWriteOnce
+  # "standard" es la StorageClass por defecto que provisiona kind
+  # (local-path-provisioner). Ajustar en un cluster real (gp3, pd-ssd, etc).
+  storageClass: "standard"
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "250m"
+    memory: "256Mi"

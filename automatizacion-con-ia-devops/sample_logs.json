@@ -1,0 +1,14 @@
+[
+  {"time": "2026-08-19 10:00:01", "level": "INFO", "service": "checkout-api", "msg": "request completed in 120ms"},
+  {"time": "19/08/2026 10:00:05", "level": "WARN", "service": "checkout-api", "msg": "db pool usage at 78%"},
+  {"time": "2026-08-19 10:00:12", "level": "INFO", "service": "payments-api", "msg": "payment authorized"},
+  {"time": "19/08/2026 10:00:20", "level": "ERROR", "service": "checkout-api", "msg": "timeout calling inventory-api"},
+  {"time": "2026-08-19 10:00:25", "level": "ERROR", "service": "checkout-api", "msg": "timeout calling inventory-api"},
+  {"time": "2026-08-19 10:00:31", "level": "WARN", "service": "inventory-api", "msg": "cpu usage above 80%"},
+  {"time": "19/08/2026 10:00:40", "level": "ERROR", "service": "checkout-api", "msg": "timeout calling inventory-api"},
+  {"time": "2026-08-19 10:00:44", "level": "ERROR", "service": "inventory-api", "msg": "connection refused by db"},
+  {"time": "2026-08-19 10:00:50", "level": "INFO", "service": "payments-api", "msg": "payment authorized"},
+  {"time": "19/08/2026 10:00:58", "level": "ERROR", "service": "checkout-api", "msg": "timeout calling inventory-api"},
+  {"time": "2026-08-19 10:01:03", "level": "CRITICAL", "service": "inventory-api", "msg": "service unresponsive, restarting pod"},
+  {"time": "2026-08-19 10:01:10", "level": "INFO", "service": "payments-api", "msg": "payment authorized"}
+]

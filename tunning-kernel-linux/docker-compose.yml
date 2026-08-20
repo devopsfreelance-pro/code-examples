@@ -1,0 +1,17 @@
+services:
+  nginx-default:
+    image: nginx:1.27-alpine
+    container_name: nginx-default
+    ports:
+      - "8081:80"
+
+  nginx-tuned:
+    image: nginx:1.27-alpine
+    container_name: nginx-tuned
+    ports:
+      - "8082:80"
+    sysctls:
+      net.core.somaxconn: 65535
+      net.ipv4.tcp_fin_timeout: 15
+      net.ipv4.tcp_syncookies: 1
+      net.ipv4.ip_local_port_range: "1024 65535"

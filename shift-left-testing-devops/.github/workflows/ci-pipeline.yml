@@ -1,0 +1,50 @@
+# Pipeline de CI/CD con gates de calidad, tal como los describe el post:
+# "umbrales mínimos de cobertura de código... el código que no supera estos
+# criterios se bloquea automáticamente".
+#
+# Dos jobs en paralelo, siguiendo la pirámide de testing:
+#   - unit-tests: base de la pirámide, tests unitarios + gate de cobertura 80%
+#   - infra-tests: test driven infrastructure, valida main.tf antes del apply
+#
+# Para usarlo en un repo real: copiar este archivo a .github/workflows/ en la
+# raíz del repo (GitHub solo detecta workflows en esa ruta).
+
+name: shift-left-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-tests:
+    name: Unit tests + gate de cobertura (80%)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install pytest pytest-cov
+
+      - name: Ejecutar tests con cobertura mínima 80%
+        run: pytest test_app.py --cov=app --cov-report=term-missing --cov-fail-under=80
+
+  infra-tests:
+    name: Test driven infrastructure (Terraform)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Validar infraestructura antes del despliegue
+        run: |
+          chmod +x check_infra_tests.sh
+          ./check_infra_tests.sh

@@ -1,0 +1,35 @@
+# Pipeline de referencia: reproduce localmente las fases Build y Test del
+# ciclo de vida DevOps descrito en el post, usando la misma app de este ejemplo.
+# No requiere secretos ni cuentas externas: corre en runners publicos de GitHub
+# Actions sin ningun despliegue real.
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run tests
+        run: python3 -m unittest test_app.py -v
+
+      - name: Build Docker image
+        run: docker build -t que-es-devops-demo:ci .
+
+      - name: Smoke test del contenedor
+        run: |
+          docker run -d --name demo -p 8080:8080 que-es-devops-demo:ci
+          sleep 2
+          curl -sf http://localhost:8080/health
+          docker rm -f demo

@@ -1,0 +1,38 @@
+# prometheus_alerts.yml
+#
+# Reglas de alerta basadas en los umbrales de riesgo de client diversity
+# descritos en el post: 33% (riesgo medio), 50% (riesgo alto) y 66%
+# (riesgo critico / umbral de supermayoria de Casper FFG).
+#
+# Requiere que diversity_exporter.py este siendo scrapeado por Prometheus
+# como target "client-diversity" (ver README.md).
+
+groups:
+  - name: client-diversity
+    rules:
+      - alert: ClientDiversityRiskMedio
+        expr: ethereum_client_share_percent >= 33 and ethereum_client_share_percent < 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cliente {{ $labels.client }} ({{ $labels.layer }}) supera el 33% de la red"
+          description: "Un bug en {{ $labels.client }} podria afectar la finalidad de un porcentaje significativo de validadores."
+
+      - alert: ClientDiversityRiskAlto
+        expr: ethereum_client_share_percent >= 50 and ethereum_client_share_percent < 66
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cliente {{ $labels.client }} ({{ $labels.layer }}) supera el 50% de la red"
+          description: "Riesgo de que una cadena invalida obtenga mayoria simple si {{ $labels.client }} falla."
+
+      - alert: ClientDiversityRiskCritico
+        expr: ethereum_client_share_percent >= 66
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cliente {{ $labels.client }} ({{ $labels.layer }}) supera el umbral de supermayoria (66%)"
+          description: "Riesgo de finalizacion incorrecta y slashing masivo si {{ $labels.client }} produce un bloque invalido."

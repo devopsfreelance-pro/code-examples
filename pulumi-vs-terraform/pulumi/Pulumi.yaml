@@ -1,0 +1,3 @@
+name: pulumi-vs-terraform-demo
+runtime: python
+description: Mismo contenedor nginx que en terraform/main.tf, definido con Pulumi (Python).

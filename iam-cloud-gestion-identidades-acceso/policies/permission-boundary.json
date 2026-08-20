@@ -1,0 +1,26 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "MaxScopeAllowed",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*",
+        "dynamodb:*",
+        "lambda:*",
+        "logs:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyPrivilegedActions",
+      "Effect": "Deny",
+      "Action": [
+        "iam:*",
+        "organizations:*",
+        "cloudtrail:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

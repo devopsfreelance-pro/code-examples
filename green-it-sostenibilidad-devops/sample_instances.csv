@@ -1,0 +1,9 @@
+instance_id,instance_type,cpu_promedio_pct,horas_encendida_mes
+i-0a1b2c3d4e5f60001,m5.xlarge,8.5,730
+i-0a1b2c3d4e5f60002,m5.large,15.2,730
+i-0a1b2c3d4e5f60003,t3.large,6.1,730
+i-0a1b2c3d4e5f60004,t3.medium,45.0,730
+i-0a1b2c3d4e5f60005,m5.large,72.3,730
+i-0a1b2c3d4e5f60006,t3.large,18.9,400
+i-0a1b2c3d4e5f60007,m5.xlarge,55.4,730
+i-0a1b2c3d4e5f60008,t3.medium,3.2,730

@@ -1,0 +1,18 @@
+# Politica Sentinel equivalente a policies/terraform.rego (regla de tags).
+# Referencia: este archivo NO se ejecuta en este ejemplo local. Sentinel solo
+# corre dentro de Terraform Cloud / Terraform Enterprise (no hay runtime
+# standalone ni imagen Docker publica), por eso no forma parte de validate.sh.
+# Se incluye para que se pueda comparar la sintaxis con la version en Rego.
+
+import "tfplan/v2" as tfplan
+
+mandatory_tags = ["Environment", "Owner", "CostCenter"]
+
+main = rule {
+    all tfplan.resource_changes as _, rc {
+        rc.type == "aws_instance" implies
+            all mandatory_tags as tag {
+                rc.change.after.tags contains tag
+            }
+    }
+}

@@ -1,0 +1,5 @@
+{
+  "team-checkout": { "team": "Checkout", "cost_center": "CC-1001" },
+  "team-payments": { "team": "Payments", "cost_center": "CC-1002" },
+  "team-search": { "team": "Search", "cost_center": "CC-1003" }
+}

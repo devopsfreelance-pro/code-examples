@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alerts/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+scrape_configs:
+  # Exporter que simula un nodo Ethereum (ejecucion + consenso) para el demo.
+  # En un nodo real esto seria el endpoint nativo de metricas de Geth/Lighthouse.
+  - job_name: 'blockchain-node'
+    static_configs:
+      - targets: ['mock-exporter:8000']
+        labels:
+          client: 'mock-geth'
+          layer: 'execution'
+
+  # Metricas de sistema (CPU, memoria, disco, I/O) via node_exporter.
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: platform-webapplication
+description: >-
+  Chart interno de la plataforma que implementa el recurso WebApplication.
+  El developer nunca edita este chart directamente: la plataforma lo
+  renderiza a partir del spec de autoservicio (ver platform-spec.yaml).
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

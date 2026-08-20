@@ -1,0 +1,24 @@
+#!/usr/bin/env bpftrace
+/*
+ * tcp_connections.bt
+ *
+ * Ilustra la parte de "observabilidad" del post: un programa eBPF minimo
+ * que se engancha al tracepoint estable sock:inet_sock_set_state del
+ * kernel para capturar, sin modificar ninguna aplicacion, cada intento
+ * de conexion TCP saliente: proceso, PID, IP y puerto de destino.
+ *
+ * Uso: ver README.md (se corre dentro del contenedor oficial de bpftrace).
+ */
+
+BEGIN
+{
+    printf("Rastreando conexiones TCP salientes (Ctrl+C para salir)...\n");
+    printf("%-6s %-16s %-16s %-6s\n", "PID", "PROCESO", "IP DESTINO", "PUERTO");
+}
+
+tracepoint:sock:inet_sock_set_state
+/args->newstate == 2/  // TCP_SYN_SENT: se esta iniciando una conexion saliente
+{
+    $daddr = ntop(args->family == 2 ? args->daddr : args->daddr_v6);
+    printf("%-6d %-16s %-16s %-6d\n", pid, comm, $daddr, args->dport);
+}

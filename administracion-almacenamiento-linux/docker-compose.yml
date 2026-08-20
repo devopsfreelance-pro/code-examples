@@ -1,0 +1,7 @@
+services:
+  lvm-demo:
+    build: .
+    container_name: lvm-demo
+    privileged: true
+    volumes:
+      - /dev:/dev

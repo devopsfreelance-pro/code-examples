@@ -1,0 +1,23 @@
+services:
+  diversity-exporter:
+    image: python:3.12-slim
+    container_name: diversity-exporter
+    working_dir: /app
+    volumes:
+      - ./:/app:ro
+    command: ["python3", "diversity_exporter.py"]
+    ports:
+      - "9877:9877"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: diversity-prometheus
+    depends_on:
+      - diversity-exporter
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus_alerts.yml:/etc/prometheus/prometheus_alerts.yml:ro
+    ports:
+      - "9090:9090"
+    restart: unless-stopped

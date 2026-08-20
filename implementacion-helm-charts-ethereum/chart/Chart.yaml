@@ -1,0 +1,11 @@
+apiVersion: v2
+name: mini-ethereum-node
+description: >-
+  Mini Helm chart de demostración que ilustra el patrón de configuración
+  (values.yaml + values de override, resources, persistence, service)
+  descrito en la guía de implementación de Helm charts para Ethereum.
+  Usa una imagen liviana (hashicorp/http-echo) en lugar de un cliente
+  Ethereum real para que el ejemplo corra en minutos en un cluster local.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

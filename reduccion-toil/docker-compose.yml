@@ -1,0 +1,23 @@
+services:
+  flaky-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.flaky
+    container_name: reduccion-toil-flaky
+    ports:
+      - "8080:8080"
+
+  watcher:
+    build:
+      context: .
+      dockerfile: Dockerfile.watcher
+    container_name: reduccion-toil-watcher
+    environment:
+      SERVICE_CONTAINER: reduccion-toil-flaky
+      HEALTH_URL: http://flaky-service:8080/health
+      MAX_RETRIES: "3"
+      RETRY_DELAY: "5"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - flaky-service

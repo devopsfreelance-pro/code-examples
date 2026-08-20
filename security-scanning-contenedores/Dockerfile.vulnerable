@@ -1,0 +1,12 @@
+FROM node:14.17.0-buster-slim
+
+WORKDIR /app
+
+# Dependencias con versiones desactualizadas a proposito, para que Trivy y
+# Grype encuentren CVEs conocidas (fines demostrativos, no usar en produccion).
+COPY package.json .
+RUN npm install --no-audit --no-fund
+
+COPY server.js .
+
+CMD ["node", "server.js"]

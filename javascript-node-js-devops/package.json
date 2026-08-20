@@ -1,0 +1,12 @@
+{
+  "name": "javascript-node-js-devops-example",
+  "version": "1.0.0",
+  "description": "Mini ejemplo de tooling DevOps con Node.js: npm scripts, health check asincrono y validacion de configuracion",
+  "private": true,
+  "scripts": {
+    "stack:up": "docker compose up -d",
+    "stack:down": "docker compose down",
+    "health": "node scripts/health-check.js",
+    "infra:validate": "node scripts/validate-infrastructure.js"
+  }
+}

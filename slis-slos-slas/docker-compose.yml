@@ -1,0 +1,23 @@
+services:
+  app:
+    image: python:3.11-slim
+    container_name: sli-demo-app
+    working_dir: /app
+    volumes:
+      - ./app.py:/app/app.py:ro
+    command: sh -c "pip install --no-cache-dir prometheus_client==0.20.0 && python app.py"
+    ports:
+      - "8080:8080"
+      - "9100:9100"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: sli-demo-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app
+    restart: unless-stopped

@@ -1,0 +1,4 @@
+PaymentTest:testDepositAndTransfer() (gas: 59273)
+PaymentTest:testEmitsTransferEvent() (gas: 62666)
+PaymentTest:testFuzzDepositAndTransfer(uint96) (runs: 256, μ: 62743, ~: 62743)
+PaymentTest:testRevertOnInsufficientBalance() (gas: 41878)

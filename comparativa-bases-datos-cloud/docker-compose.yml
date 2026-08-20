@@ -1,0 +1,27 @@
+# Simula localmente el patron de monitoreo con pg_stat_statements que
+# tanto RDS como Cloud SQL exponen en sus variantes PostgreSQL gestionadas
+# (ver seccion "Optimizacion de costos en bases de datos gestionadas" del post).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: comparativa-bd-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: production_db
+    ports:
+      - "5432:5432"
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track=all
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo -d production_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

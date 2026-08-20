@@ -1,0 +1,21 @@
+# Build "tradicional" de un solo stage sobre Debian slim, sin separar
+# dependencias de compilación de runtime. Sirve de contraste de tamaño
+# frente a Dockerfile.alpine (mismo código, misma app).
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY app/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN useradd -m -u 1000 appuser
+
+COPY --chown=appuser:appuser app/app.py /app/app.py
+
+WORKDIR /app
+USER appuser
+
+EXPOSE 5000
+CMD ["python3", "app.py"]

@@ -1,0 +1,11 @@
+## Configuracion minima de Alertmanager para la demo.
+## Sin receptor externo (sin Slack/email/webhook real): el objetivo es
+## ver la alerta pasar a estado "firing" en la UI y en la API de Alertmanager.
+route:
+  receiver: "null-receiver"
+  group_wait: 5s
+  group_interval: 10s
+  repeat_interval: 1h
+
+receivers:
+  - name: "null-receiver"

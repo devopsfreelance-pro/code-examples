@@ -1,0 +1,38 @@
+groups:
+  - name: validator-alerts
+    rules:
+      - alert: MissedAttestation
+        expr: increase(validator_attestation_miss_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Validador perdio una atestacion"
+          description: "El validador {{ $labels.pubkey }} perdio atestaciones."
+
+      - alert: BalanceDecreasing
+        expr: delta(validator_balance_gwei[1h]) < -1000000
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Balance del validador decreciendo"
+          description: "El validador {{ $labels.pubkey }} perdio {{ $value }} gwei en la ultima hora."
+
+      - alert: ProposalMissed
+        expr: increase(validator_proposal_miss_total[1h]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Propuesta de bloque perdida"
+          description: "El validador perdio una oportunidad de proponer un bloque."
+
+      - alert: SlashingDetected
+        expr: increase(validator_slashings_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SLASHING DETECTADO"
+          description: "Se detecto un evento de slashing. Investigar inmediatamente."

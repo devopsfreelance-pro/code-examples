@@ -1,0 +1,23 @@
+services:
+  web1:
+    build: ./backend
+    environment:
+      - BACKEND_NAME=web1
+      - PORT=8080
+
+  web2:
+    build: ./backend
+    environment:
+      - BACKEND_NAME=web2
+      - PORT=8080
+
+  haproxy:
+    image: haproxy:2.9-alpine
+    depends_on:
+      - web1
+      - web2
+    ports:
+      - "8080:80"
+      - "8404:8404"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro

@@ -1,0 +1,49 @@
+version: "3.8"
+
+# Simula un cluster compartido por 3 equipos (checkout, payments, search).
+# cAdvisor mide el consumo real de CPU de cada contenedor, Prometheus lo
+# scrapea y allocate_costs.py distribuye un costo mensual ficticio del
+# cluster en proporcion al uso de CPU medido, igual que el patron
+# SharedCostAllocator del post.
+
+services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: cadvisor
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - cadvisor
+
+  team-checkout:
+    image: busybox:1.36
+    container_name: team-checkout
+    mem_limit: 128m
+    command: sh -c "while true; do :; done"
+
+  team-payments:
+    image: busybox:1.36
+    container_name: team-payments
+    mem_limit: 128m
+    command: sh -c "while true; do i=0; while [ $$i -lt 2000000 ]; do i=$$((i+1)); done; sleep 0.3; done"
+
+  team-search:
+    image: busybox:1.36
+    container_name: team-search
+    mem_limit: 128m
+    command: sh -c "while true; do i=0; while [ $$i -lt 2000000 ]; do i=$$((i+1)); done; sleep 0.8; done"

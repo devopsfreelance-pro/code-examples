@@ -1,0 +1,110 @@
+---
+# Canary Deployment sin service mesh: un unico Service selecciona Pods de
+# DOS Deployments (stable y canary) que comparten la label `app: demo-canary`.
+# kube-proxy balancea round-robin entre todos los endpoints, asi que la
+# proporcion de trafico que recibe cada version queda determinada por la
+# proporcion de replicas: 9 stable + 1 canary =~ 90%/10%.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stable-html
+data:
+  index.html: |
+    <html><body><h1>STABLE v1</h1></body></html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: canary-html
+data:
+  index.html: |
+    <html><body><h1>CANARY v2</h1></body></html>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-stable
+  labels:
+    app: demo-canary
+    track: stable
+spec:
+  replicas: 9
+  selector:
+    matchLabels:
+      app: demo-canary
+      track: stable
+  template:
+    metadata:
+      labels:
+        app: demo-canary
+        track: stable
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+      volumes:
+        - name: html
+          configMap:
+            name: stable-html
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-canary
+  labels:
+    app: demo-canary
+    track: canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-canary
+      track: canary
+  template:
+    metadata:
+      labels:
+        app: demo-canary
+        track: canary
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
+      volumes:
+        - name: html
+          configMap:
+            name: canary-html
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-canary
+spec:
+  selector:
+    app: demo-canary
+  ports:
+    - port: 80
+      targetPort: 80

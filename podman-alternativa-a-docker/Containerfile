@@ -1,0 +1,15 @@
+# Containerfile == Dockerfile: funciona sin cambios con `docker build`
+# y con `podman build`. Se llama Containerfile por convencion OCI/podman.
+FROM docker.io/library/python:3.12-alpine
+
+# Ejecutar como usuario sin privilegios tambien DENTRO del contenedor,
+# reforzando el modelo rootless de punta a punta.
+RUN adduser -D -u 1000 appuser
+WORKDIR /app
+COPY app/app.py .
+USER appuser
+
+EXPOSE 8080
+ENV PORT=8080
+
+CMD ["python", "app.py"]

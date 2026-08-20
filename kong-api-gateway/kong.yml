@@ -1,0 +1,31 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: httpbin-service
+    url: http://httpbin:80
+    routes:
+      - name: httpbin-route
+        paths:
+          - /httpbin
+        strip_path: true
+
+plugins:
+  # Rate limiting: maximo 5 peticiones por minuto por servicio, sin base de
+  # datos externa (policy local, tal como describe el post para modo DB-less).
+  - name: rate-limiting
+    service: httpbin-service
+    config:
+      minute: 5
+      policy: local
+      fault_tolerant: true
+      hide_client_headers: false
+
+  # Request Transformer: agrega un header antes de reenviar al backend,
+  # ilustrando la transformacion de peticiones en transito.
+  - name: request-transformer
+    service: httpbin-service
+    config:
+      add:
+        headers:
+          - "X-Gateway:Kong-Demo"

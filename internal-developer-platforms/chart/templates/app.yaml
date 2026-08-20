@@ -1,0 +1,59 @@
+{{/*
+Esto es lo que el post llama la capa que "oculta la complejidad de
+multiples recursos de Kubernetes (Deployment, Service, Ingress...)
+detras de una interfaz simple": el developer solo entrego un
+WebApplication de unas pocas lineas (platform-spec.yaml) y la
+plataforma resuelve Deployment + Service con buenas practicas
+(resource requests, probes) por defecto.
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name | required "falta .Values.name" }}
+  labels:
+    app: {{ .Values.name }}
+    managed-by: internal-platform
+spec:
+  replicas: {{ .Values.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      containers:
+        - name: {{ .Values.name }}
+          image: {{ .Values.image | required "falta .Values.image" }}
+          ports:
+            - containerPort: {{ .Values.port | default 80 }}
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | default "100m" }}
+              memory: {{ .Values.resources.requests.memory | default "128Mi" }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.port | default 80 }}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.port | default 80 }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+    managed-by: internal-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.name }}
+  ports:
+    - port: {{ .Values.port | default 80 }}
+      targetPort: {{ .Values.port | default 80 }}

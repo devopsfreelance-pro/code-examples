@@ -1,0 +1,45 @@
+name: Smart Contract CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install dependencies
+        run: forge install foundry-rs/forge-std --no-git --no-commit
+      - name: Compile contracts and check size (limite EIP-170)
+        run: forge build --sizes
+
+  test:
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install dependencies
+        run: forge install foundry-rs/forge-std --no-git --no-commit
+      - name: Run unit tests
+        run: forge test -vvv
+      - name: Run fuzz tests
+        run: forge test --match-test testFuzz --fuzz-runs 1000
+
+  gas-snapshot:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install dependencies
+        run: forge install foundry-rs/forge-std --no-git --no-commit
+      - name: Check gas regressions contra .gas-snapshot commiteado
+        run: forge snapshot --check --tolerance 5
