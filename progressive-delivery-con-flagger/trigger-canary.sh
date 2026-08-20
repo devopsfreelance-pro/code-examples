@@ -7,7 +7,7 @@
 set -euo pipefail
 
 NAMESPACE="test"
-NEW_IMAGE="ghcr.io/stefanprodan/podinfo:6.5.5"
+NEW_IMAGE="ghcr.io/stefanprodan/podinfo:6.6.0"
 
 echo "==> Imagen actual de podinfo:"
 kubectl get deployment podinfo -n "${NAMESPACE}" \

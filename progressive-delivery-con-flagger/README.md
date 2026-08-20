@@ -84,24 +84,32 @@ disparar el próximo canary.
 ```
 
 Este script cambia la imagen de `podinfo` a una versión nueva
-(`6.5.5`) y sigue el estado del `Canary` en vivo. Vas a ver algo como:
+(`6.6.0`) y sigue el estado del `Canary` en vivo. Vas a ver algo como:
 
 ```
 NAME      STATUS       WEIGHT   LASTTRANSITIONTIME
-podinfo   Progressing  10       2026-08-20T15:10:15Z
-podinfo   Progressing  20       2026-08-20T15:10:30Z
-podinfo   Progressing  30       2026-08-20T15:10:45Z
-podinfo   Progressing  40       2026-08-20T15:11:00Z
-podinfo   Progressing  50       2026-08-20T15:11:15Z
+podinfo   Progressing  0        2026-08-20T15:10:15Z
+podinfo   Progressing  0        2026-08-20T15:10:30Z
+podinfo   Progressing  0        2026-08-20T15:10:45Z
+podinfo   Promoting    0        2026-08-20T15:11:00Z
+podinfo   Finalising   0        2026-08-20T15:11:15Z
 podinfo   Succeeded    0        2026-08-20T15:11:30Z
 ```
 
-`WEIGHT` es el porcentaje de tráfico que en cada paso recibe la versión
-canary frente a la primaria (aproximado por la proporción de réplicas
-listas, ya que no hay service mesh manipulando pesos a nivel de red).
-Cuando llega a `Succeeded`, Flagger promovió la nueva versión a
-`podinfo-primary` y volvió el `WEIGHT` a 0 a la espera del próximo
-cambio. Cortá el `--watch` con `Ctrl+C` cuando veas `Succeeded`.
+Con el provider `kubernetes` (sin service mesh), Flagger no mueve
+tráfico por peso: el propio operador loguea "Progressive traffic is not
+supported when using the kubernetes provider" y en su lugar hace un
+análisis por iteraciones al estilo blue/green (`stepWeight`/`maxWeight`
+quedan definidos en `canary.yaml` mismo, pero se ignoran con este
+provider). `WEIGHT` se mantiene en `0` durante todo el proceso; podés
+seguir el avance real por las iteraciones (`Advance podinfo.test canary
+iteration N/10`) en `kubectl -n test describe canary podinfo` o en los
+logs de Flagger. Cuando el `STATUS` llega a `Succeeded`, Flagger corrió
+el smoke test y el load test durante todas las iteraciones sin fallos y
+promovió la nueva versión a `podinfo-primary` de una vez. Si querés ver
+tráfico moviéndose por peso real (10% → 20% → ... 50%), necesitás un
+service mesh como Istio (`meshProvider=istio`), que el post cubre por
+separado. Cortá el `--watch` con `Ctrl+C` cuando veas `Succeeded`.
 
 En otra terminal podés ver los eventos y el detalle de cada webhook:
 

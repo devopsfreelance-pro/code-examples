@@ -98,7 +98,7 @@ spec:
         timeout: 15s
         metadata:
           type: bash
-          cmd: "curl -s http://podinfo-canary.test:9898/token | grep token"
+          cmd: "curl -s -d 'test' http://podinfo-canary.test:9898/token | grep token"
       # Genera carga contra el Service canary durante todo el análisis,
       # necesaria para que existan datos de request-success-rate/duration.
       - name: load-test

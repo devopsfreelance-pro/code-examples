@@ -123,6 +123,11 @@ residual en el equipo.
 
 ## Notas
 
+- La version del chart de Crossplane esta fijada en `1.20.11` (ultima release
+  de la linea v1.x) en `run-demo.sh`. La `Composition` de este ejemplo usa el
+  modo clasico `Resources` (Patch & Transform); Crossplane v2.x elimino ese
+  modo y solo acepta `Pipeline` (Composition Functions), asi que instalar la
+  version mas reciente sin pinear rompe el ejemplo.
 - La version del paquete `provider-kubernetes` esta fijada en
   `v0.13.0` en `02-provider-kubernetes.yaml`. Si al correr `run-demo.sh` el
   provider no llega a `Healthy`, revisar la lista de tags disponibles en

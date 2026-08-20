@@ -43,7 +43,7 @@ spec:
           fromFieldPath: spec.parameters.size
           toFieldPath: spec.forProvider.manifest.data.size
         - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
           toFieldPath: spec.forProvider.manifest.metadata.name
           transforms:
             - type: string
@@ -69,7 +69,7 @@ spec:
             name: kubernetes-provider
       patches:
         - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
+          fromFieldPath: metadata.labels[crossplane.io/claim-name]
           toFieldPath: spec.forProvider.manifest.metadata.name
           transforms:
             - type: string

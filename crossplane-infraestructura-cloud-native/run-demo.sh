@@ -17,11 +17,16 @@ fi
 kubectl config use-context "kind-${CLUSTER_NAME}"
 
 echo "==> 2/6 Instalando Crossplane via Helm"
+# Se pinea la version 1.20.11 (ultima release de la linea v1.x): la
+# Composition de este ejemplo (01-composition.yaml) usa el modo clasico
+# "Resources" (Patch & Transform). Crossplane v2.x elimino el campo
+# spec.resources y solo acepta modo "Pipeline" (Composition Functions).
 helm repo add crossplane-stable https://charts.crossplane.io/stable --force-update
 helm repo update
 helm upgrade --install crossplane crossplane-stable/crossplane \
   --namespace crossplane-system \
   --create-namespace \
+  --version 1.20.11 \
   --wait \
   --timeout 5m
 
@@ -30,11 +35,18 @@ kubectl wait --for=condition=Available deployment/crossplane \
   -n crossplane-system --timeout=180s
 
 echo "==> 4/6 Instalando provider-kubernetes y su ProviderConfig"
-kubectl apply -f "${SCRIPT_DIR}/02-provider-kubernetes.yaml"
+# El ProviderConfig usa un CRD (kubernetes.crossplane.io/v1alpha1) que instala
+# el propio provider al arrancar, por lo que este primer apply puede fallar
+# con "no matches for kind ProviderConfig" si el CRD todavia no esta
+# registrado (carrera). Se tolera el fallo y se reintenta despues de esperar
+# a que el provider quede Healthy.
+kubectl apply -f "${SCRIPT_DIR}/02-provider-kubernetes.yaml" || true
 
 echo "    esperando a que el provider quede healthy (puede tardar 1-2 min)..."
 kubectl wait --for=condition=Healthy provider.pkg.crossplane.io/provider-kubernetes \
   --timeout=180s
+
+kubectl apply -f "${SCRIPT_DIR}/02-provider-kubernetes.yaml"
 
 echo "==> 5/6 Aplicando XRD y Composition (la API de infraestructura custom)"
 kubectl apply -f "${SCRIPT_DIR}/00-xrd.yaml"

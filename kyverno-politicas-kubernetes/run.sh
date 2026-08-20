@@ -36,8 +36,12 @@ echo "== 4/6: aplicando la ClusterPolicy require-resource-limits =="
 kubectl apply -f "${SCRIPT_DIR}/require-resource-limits.yaml"
 echo "Esperando a que la policy quede lista..."
 for i in $(seq 1 30); do
+  # Kyverno 1.11-1.13 exponia status.ready (bool). Versiones actuales (1.14+)
+  # lo reemplazaron por status.conditions[type=Ready].status. Se chequean
+  # ambos para soportar cualquiera de las dos versiones del CRD.
   ready="$(kubectl get clusterpolicy require-resource-limits -o jsonpath='{.status.ready}' 2>/dev/null || true)"
-  if [ "$ready" = "true" ]; then
+  ready_cond="$(kubectl get clusterpolicy require-resource-limits -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || true)"
+  if [ "$ready" = "true" ] || [ "$ready_cond" = "True" ]; then
     break
   fi
   sleep 2
