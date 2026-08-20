@@ -1,0 +1,84 @@
+name: Deep test examples
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 6'  # sabados: control de calidad semanal profundo
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install tooling
+        run: |
+          curl -sL https://get.opentofu.org/install-opentofu.sh -o /tmp/it.sh
+          chmod +x /tmp/it.sh && /tmp/it.sh --install-method standalone > /dev/null
+          curl -sLo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64 && chmod +x /usr/local/bin/kind
+
+      - name: Create kind cluster (para dry-run server de manifests)
+        run: kind create cluster --wait 90s
+
+      - name: Run shard
+        run: |
+          mkdir -p results
+          i=0
+          for d in $(ls -d */ | grep -vE '^(tools|results)/' | sort); do
+            if [ $((i % 20)) -eq ${{ matrix.shard }} ]; then
+              echo "::group::${d%/}"
+              bash tools/test_example.sh "${d%/}" | tee -a results/shard-${{ matrix.shard }}.log || true
+              echo "::endgroup::"
+            fi
+            i=$((i+1))
+          done
+          grep '^RESULT|' results/shard-${{ matrix.shard }}.log > results/shard-${{ matrix.shard }}.txt || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ matrix.shard }}
+          path: results/shard-${{ matrix.shard }}.txt
+
+  report:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: all
+          merge-multiple: true
+
+      - name: Aggregate
+        run: |
+          cat all/*.txt | sort -t'|' -k2 > report.txt
+          total=$(wc -l < report.txt)
+          pass=$(grep -c '|PASS|' report.txt || true)
+          partial=$(grep -c '|PARTIAL|' report.txt || true)
+          fail=$(grep -c '|FAIL|' report.txt || true)
+          {
+            echo "## Deep test: $total ejemplos"
+            echo "- PASS: $pass"
+            echo "- PARTIAL (validado, no ejecutable en CI): $partial"
+            echo "- FAIL: $fail"
+            echo ""
+            if [ "$fail" -gt 0 ]; then
+              echo "### Fallas"
+              grep '|FAIL|' report.txt | awk -F'|' '{print "- **" $2 "**: " $4}'
+            fi
+            echo ""
+            echo "<details><summary>PARTIAL (razones)</summary>"
+            echo ""
+            grep '|PARTIAL|' report.txt | awk -F'|' '{print "- " $2 ": " $4}'
+            echo "</details>"
+          } >> $GITHUB_STEP_SUMMARY
+          cp report.txt deep-test-report.txt
+          [ "$fail" -eq 0 ]
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deep-test-report
+          path: deep-test-report.txt
