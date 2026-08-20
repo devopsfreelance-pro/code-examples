@@ -17,6 +17,8 @@ El post explica que eBPF permite dos cosas sin instrumentar aplicaciones ni modi
 
 No se necesita ninguna cuenta ni servicio pago: todo corre en contenedores locales sobre tu propio kernel.
 
+**No corre en runners de CI genericos (GitHub Actions, GitLab CI, etc.)**: aunque el runner sea Linux y el contenedor de Falco se levante en modo `privileged`, la carga de los programas eBPF del motor `modern_ebpf` depende de que la relocacion CO-RE coincida exactamente con el BTF del kernel del runner; en la practica esto falla con errores de inicializacion (`scap_init`) fuera de una maquina donde controlas el kernel. Este ejemplo esta pensado para correrlo en tu propia maquina Linux, no en pipelines de CI.
+
 ## Archivos
 
 - `docker-compose.yml` — Levanta Falco (`falcosecurity/falco-no-driver`) en modo privilegiado con el motor eBPF `modern_ebpf`, con salida en JSON.

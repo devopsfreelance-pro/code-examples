@@ -22,9 +22,12 @@ RUN useradd -m -s /bin/bash deploy && \
     mkdir -p /home/deploy/.ssh && \
     chmod 700 /home/deploy/.ssh
 
-# Clave pública del lector (generada en el paso 1 del README)
-COPY authorized_keys /home/deploy/.ssh/authorized_keys
-RUN chmod 600 /home/deploy/.ssh/authorized_keys && \
+# Par de claves de demo generado dentro de la imagen: así "docker compose up"
+# funciona sin material externo. La privada se extrae luego con
+# "docker compose cp" (ver README) para probar la conexión SSH.
+RUN ssh-keygen -t ed25519 -f /home/deploy/.ssh/id_demo -N "" -q -C "demo@ubuntu-hardened" && \
+    cp /home/deploy/.ssh/id_demo.pub /home/deploy/.ssh/authorized_keys && \
+    chmod 600 /home/deploy/.ssh/authorized_keys /home/deploy/.ssh/id_demo && \
     chown -R deploy:deploy /home/deploy/.ssh
 
 # Configuraciones endurecidas tomadas directamente del post

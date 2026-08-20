@@ -1,0 +1,1 @@
+El provider libvirt requiere un daemon libvirtd local con acceso a /dev/kvm (virtualizacion de hardware anidada), inexistente en los runners de CI; tofu plan solo puede validarse en un host con KVM/libvirt real.

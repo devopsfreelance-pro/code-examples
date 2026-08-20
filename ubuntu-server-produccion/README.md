@@ -23,38 +23,37 @@ reproducible en cualquier máquina.
 ## Requisitos
 
 - Docker y Docker Compose (`docker compose version`)
-- `ssh-keygen` (viene con OpenSSH client, ya instalado en Linux/macOS)
 
 ## Pasos para correrlo
 
 Desde este directorio (`ubuntu-server-produccion/`):
 
 ```bash
-# 1. Generar un par de claves SSH solo para esta demo
-ssh-keygen -t ed25519 -f id_demo -N ""
-
-# 2. Copiar la clave pública para que el Dockerfile la incluya en el usuario deploy
-cp id_demo.pub authorized_keys
-
-# 3. Construir y levantar el contenedor
+# 1. Construir y levantar el contenedor.
+#    El Dockerfile genera un par de claves de demo DENTRO de la imagen
+#    (no hace falta material externo para que el build funcione).
 docker compose up --build -d
 
-# 4. Conectarse por SSH usando la configuración endurecida (puerto 2222)
+# 2. Extraer la clave privada de demo generada en el contenedor
+docker compose cp ubuntu-hardened:/home/deploy/.ssh/id_demo ./id_demo
+chmod 600 id_demo
+
+# 3. Conectarse por SSH usando la configuración endurecida (puerto 2222)
 ssh -i id_demo -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null deploy@localhost "echo conexion OK"
 
-# 5. Correr el script de auditoría de hardening dentro del contenedor
+# 4. Correr el script de auditoría de hardening dentro del contenedor
 docker compose exec ubuntu-hardened bash /scripts/audit-hardening.sh
 ```
 
 ## Salida esperada
 
-Paso 4 (conexión SSH con clave, sin password):
+Paso 3 (conexión SSH con clave, sin password):
 
 ```
 conexion OK
 ```
 
-Paso 5 (auditoría de hardening):
+Paso 4 (auditoría de hardening):
 
 ```
 == Hardening de SSH (/etc/ssh/sshd_config) ==
@@ -84,14 +83,15 @@ aplicado igual que en el post.
 ## Limpieza
 
 ```bash
-docker compose down
-rm -f id_demo id_demo.pub authorized_keys
+docker compose down -v --remove-orphans
+rm -f id_demo
 ```
 
 ## Notas
 
-- `authorized_keys`, `id_demo` e `id_demo.pub` se generan localmente en el
-  paso 1-2 y no se versionan (son material de clave, no forman parte del
-  ejemplo en sí).
+- `id_demo` (la clave privada) se extrae del contenedor en el paso 2 y no se
+  versiona (es material de clave, no forma parte del ejemplo en sí). La
+  clave pública correspondiente (`authorized_keys`) se genera y queda solo
+  dentro de la imagen.
 - El usuario `deploy` es el mismo nombre usado en `AllowUsers deploy` del
   post; solo él puede autenticarse, y únicamente con clave pública.

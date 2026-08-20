@@ -42,14 +42,17 @@ correría antes de cada merge.
    cd pci-dss-aplicaciones
    ```
 
-2. Crear el secret local (solo para este demo; en un entorno real esto sale
-   de AWS Secrets Manager, Vault o un secreto de Kubernetes, como menciona
-   el post):
+2. El repo ya incluye `secrets/db_password.txt` con el valor de ejemplo
+   `change-me-local-dev-only`, para que el ejemplo funcione out-of-the-box
+   (incluido en CI). Si querés regenerarlo o cambiar el valor local:
 
    ```bash
    mkdir -p secrets
    echo "change-me-local-dev-only" > secrets/db_password.txt
    ```
+
+   En un entorno real este archivo NUNCA se commitea: el valor sale de AWS
+   Secrets Manager, Vault o un secreto de Kubernetes, como menciona el post.
 
 3. Levantar la base de datos y la API:
 
@@ -123,7 +126,10 @@ correría antes de cada merge.
 ## Notas
 
 - `secrets/db_password.txt` es un valor de ejemplo para desarrollo local
-  únicamente, por eso está en `.gitignore`. Nunca commitear secretos reales.
+  únicamente (`change-me-local-dev-only`), incluido en el repo para que el
+  demo corra sin pasos manuales. Nunca commitear secretos reales: en un
+  proyecto real ese archivo va en `.gitignore` y el valor sale de un
+  gestor de secretos.
 - Este ejemplo es deliberadamente mínimo: no reemplaza una implementación
   completa de PCI DSS (falta TLS, WAF, MFA, SIEM, etc.), solo ilustra el
   patrón de secure coding a nivel de aplicación que describe el post.

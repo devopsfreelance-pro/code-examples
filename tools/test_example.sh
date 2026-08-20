@@ -21,6 +21,14 @@ DIR="${DIR%/}"
 STATUS="PASS"
 NOTES=()
 
+# Convencion: un archivo .ci-partial en el directorio declara que el ejemplo no
+# puede ejecutarse en CI (privilegios de kernel, systemd, hardware). Su contenido
+# es la razon. Se valida sintaxis igual, pero no se ejecuta.
+if [ -f "$DIR/.ci-partial" ]; then
+  echo "RESULT|$DIR|PARTIAL|declarado no-ejecutable en CI: $(head -c 200 "$DIR/.ci-partial" | tr '\n' ' ')"
+  exit 0
+fi
+
 demote() { # degradar el estado global: PASS -> PARTIAL -> FAIL
   local to="$1" why="$2"
   NOTES+=("$why")
@@ -90,24 +98,35 @@ while IFS= read -r tdir; do
 done < <(find "$DIR" -name '*.tf' | xargs -r -n1 dirname | sort -u)
 
 # ---------- manifests kubernetes ----------
-K8S_FILES=$(grep -rlE '^kind:' "$DIR" --include='*.yaml' --include='*.yml' 2>/dev/null | grep -vE 'templates/|Chart.yaml|docker-compose|compose.yml|values' || true)
+# Apply REAL contra el cluster (kind en CI): persiste namespaces y pasa admission,
+# a diferencia de dry-run=server. Limpieza al final con delete de los mismos files.
+# Los configs de kind (apiVersion kind.x-k8s.io) no son manifests aplicables.
+K8S_FILES=$(grep -rlE '^kind:' "$DIR" --include='*.yaml' --include='*.yml' 2>/dev/null \
+  | grep -vE 'templates/|Chart.yaml|docker-compose|compose.yml|values' \
+  | while read -r f; do grep -q 'kind.x-k8s.io' "$f" || echo "$f"; done | sort || true)
 if [ -n "$K8S_FILES" ]; then
   if kubectl cluster-info >/dev/null 2>&1; then
+    APPLIED=()
     while IFS= read -r kf; do
-      echo "== k8s dry-run: $kf"
-      out=$(kubectl apply --dry-run=server -f "$kf" 2>&1)
+      echo "== k8s apply: $kf"
+      out=$(kubectl apply -f "$kf" 2>&1)
       if [ $? -ne 0 ]; then
-        # CRDs de operadores no instalados son PARTIAL, no FAIL
         if echo "$out" | grep -qiE 'no matches for kind|ensure CRDs are installed'; then
           demote PARTIAL "requiere CRDs/operador no instalado: $kf"
         else
           echo "$out" | head -5
-          demote FAIL "dry-run fallo: $kf"
+          demote FAIL "apply fallo: $kf"
         fi
+      else
+        APPLIED+=("$kf")
       fi
     done <<< "$K8S_FILES"
+    # limpieza en orden inverso
+    for ((idx=${#APPLIED[@]}-1; idx>=0; idx--)); do
+      kubectl delete -f "${APPLIED[$idx]}" --ignore-not-found --wait=false >/dev/null 2>&1
+    done
   else
-    demote PARTIAL "manifests K8s sin cluster disponible para dry-run"
+    demote PARTIAL "manifests K8s sin cluster disponible"
   fi
 fi
 

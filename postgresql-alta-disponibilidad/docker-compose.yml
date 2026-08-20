@@ -1,8 +1,6 @@
-version: "3.8"
-
 services:
   postgres-primary:
-    image: bitnami/postgresql:16
+    image: bitnamilegacy/postgresql:16
     container_name: pg-primary
     environment:
       POSTGRESQL_REPLICATION_MODE: master
@@ -22,7 +20,7 @@ services:
       retries: 5
 
   postgres-replica:
-    image: bitnami/postgresql:16
+    image: bitnamilegacy/postgresql:16
     container_name: pg-replica
     environment:
       POSTGRESQL_REPLICATION_MODE: slave
@@ -40,14 +38,14 @@ services:
       - replica_data:/bitnami/postgresql
 
   pgbouncer:
-    image: edoburu/pgbouncer:1.21.0
+    image: edoburu/pgbouncer:1.21.0-p2
     container_name: pgbouncer
     environment:
-      DATABASE_HOST: postgres-primary
-      DATABASE_PORT: 5432
-      DATABASE_USER: appuser
-      DATABASE_PASSWORD: apppass
-      DATABASE_NAME: appdb
+      DB_HOST: postgres-primary
+      DB_PORT: 5432
+      DB_USER: appuser
+      DB_PASSWORD: apppass
+      DB_NAME: appdb
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 100
       DEFAULT_POOL_SIZE: 20

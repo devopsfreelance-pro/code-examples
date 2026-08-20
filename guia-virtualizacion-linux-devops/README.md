@@ -39,6 +39,13 @@ con Terraform (provider `libvirt`).
 No se necesita ninguna cuenta ni credencial paga: todo corre localmente
 contra el daemon `libvirtd` del propio host (`qemu:///system`).
 
+> **Nota sobre CI/runners**: el ejemplo de Terraform (`terraform/`) no puede
+> ejecutarse en un runner de CI estandar (GitHub Actions, etc.): necesita un
+> daemon `libvirtd` corriendo localmente con acceso a `/dev/kvm`
+> (virtualizacion de hardware), algo que estos runners no exponen. `tofu
+> plan`/`terraform plan` solo funcionan en un host real con KVM/libvirt
+> instalado y configurado como se describe arriba.
+
 ## Pasos para correrlo
 
 ### 1. Diagnóstico de virtualización
