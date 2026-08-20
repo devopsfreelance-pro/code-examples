@@ -15,8 +15,10 @@ cleanup() {
     umount "$MOUNT_POINT" 2>/dev/null || true
     lvchange -an "/dev/${VG_NAME}/${LV_NAME}" 2>/dev/null || true
     vgremove -f "$VG_NAME" 2>/dev/null || true
-    for dev in $(losetup -j "$DISK_DIR/disk1.img" "$DISK_DIR/disk2.img" 2>/dev/null | cut -d: -f1); do
-        losetup -d "$dev" 2>/dev/null || true
+    for img in "$DISK_DIR/disk1.img" "$DISK_DIR/disk2.img"; do
+        for dev in $(losetup -j "$img" 2>/dev/null | cut -d: -f1); do
+            losetup -d "$dev" 2>/dev/null || true
+        done
     done
 }
 trap cleanup EXIT

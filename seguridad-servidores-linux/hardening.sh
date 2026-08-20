@@ -49,6 +49,24 @@ fi
 find /etc -xdev -type f -perm -0002 -exec chmod o-w {} \; 2>/dev/null || true
 echo "[hardening] permisos world-writable removidos en /etc"
 
+# 7. Recargar sshd para que los cambios de PermitRootLogin/PasswordAuthentication
+# tomen efecto. OJO: en un contenedor donde sshd corre como PID 1 en foreground
+# (sin systemd), "service ssh restart" MATA el proceso principal y tira abajo
+# el contenedor entero. Por eso se recarga con SIGHUP (sshd relee su config sin
+# perder el PID) en vez de reiniciar el proceso. En un servidor real con systemd
+# se usa el reload nativo, que es igual de seguro.
+if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+    systemctl reload ssh 2>/dev/null || systemctl reload sshd 2>/dev/null || true
+    echo "[hardening] sshd recargado (systemctl reload)"
+else
+    sshd_pid="$(cat /run/sshd.pid 2>/dev/null || true)"
+    [ -n "$sshd_pid" ] || sshd_pid="$(pgrep -x sshd 2>/dev/null | head -1 || true)"
+    if [ -n "$sshd_pid" ] && kill -HUP "$sshd_pid" 2>/dev/null; then
+        echo "[hardening] sshd recargado (SIGHUP a PID $sshd_pid, sin matar el proceso)"
+    else
+        echo "[hardening] aviso: no se pudo recargar sshd automaticamente; los cambios de SSH quedan en el archivo pero no aplican hasta el proximo reinicio del servicio"
+    fi
+fi
+
 echo
-echo "Hardening aplicado. Reinicia sshd para que los cambios de SSH tomen efecto:"
-echo "  service ssh restart"
+echo "Hardening aplicado."
